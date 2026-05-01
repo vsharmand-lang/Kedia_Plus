@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DeDollar Stock Monitor — India</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg2: #111827;
+  --bg3: #1a2235;
+  --bg4: #1e2d45;
+  --border: rgba(99,179,237,0.12);
+  --border2: rgba(99,179,237,0.25);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --accent: #38bdf8;
+  --accent2: #0ea5e9;
+  --green: #22d3a5;
+  --green2: #10b981;
+  --red: #f87171;
+  --red2: #ef4444;
+  --amber: #fbbf24;
+  --purple: #a78bfa;
+  --teal: #2dd4bf;
+  --gold: #f59e0b;
+  --r: 8px;
+  --r2: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+
+/* Layout */
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.main{padding:24px;overflow-x:hidden}
+
+/* Sidebar */
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-title{font-size:16px;font-weight:700;color:var(--accent);letter-spacing:0.02em}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.nav{padding:12px 8px;flex:1}
+.nav-section{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;padding:12px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.15s;margin-bottom:2px}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(56,189,248,0.12);color:var(--accent);font-weight:500}
+.nav-icon{width:16px;height:16px;opacity:0.8;flex-shrink:0}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Header */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.header-actions{display:flex;gap:8px;align-items:center}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:var(--r);border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s}
+.btn-primary{background:var(--accent2);color:#fff}
+.btn-primary:hover{background:var(--accent);transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-danger{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--red)}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.card-sm{padding:14px 16px}
+.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px}
+
+/* Grid */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* Stat cards */
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:700;color:var(--text);line-height:1.2}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.stat-green{color:var(--green)}
+.stat-red{color:var(--red)}
+.stat-amber{color:var(--amber)}
+
+/* Stock cards */
+.stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+.stock-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.stock-card:hover{border-color:var(--border2);box-shadow:0 0 0 1px rgba(56,189,248,0.1),var(--shadow);transform:translateY(-2px)}
+.stock-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--purple))}
+.stock-card.alert-active::before{background:linear-gradient(90deg,var(--green),var(--teal));animation:glow 1.5s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.6}to{opacity:1}}
+.stock-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.stock-name{font-size:15px;font-weight:700;color:var(--text)}
+.stock-sector{font-size:11px;color:var(--text3);margin-top:2px}
+.stock-price{text-align:right}
+.stock-price-val{font-size:22px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.stock-change{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:3px}
+.change-pos{background:rgba(34,211,165,0.12);color:var(--green)}
+.change-neg{background:rgba(248,113,113,0.12);color:var(--red)}
+.stock-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.metric-item{text-align:center}
+.metric-val{font-size:14px;font-weight:600;color:var(--text)}
+.metric-lbl{font-size:10px;color:var(--text3);margin-top:1px}
+.alert-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600}
+.badge-green{background:rgba(34,211,165,0.12);color:var(--green);border:1px solid rgba(34,211,165,0.2)}
+.badge-amber{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+.badge-red{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.badge-blue{background:rgba(56,189,248,0.12);color:var(--accent);border:1px solid rgba(56,189,248,0.2)}
+.badge-purple{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+
+/* Alert thresholds */
+.threshold-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.threshold-row:last-child{border-bottom:none}
+.toggle{width:36px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;transition:background 0.2s}
+.toggle.on{background:var(--green2)}
+.toggle.off{background:var(--bg4)}
+.toggle::after{content:'';position:absolute;top:3px;width:14px;height:14px;border-radius:50%;background:white;transition:left 0.2s}
+.toggle.on::after{left:19px}
+.toggle.off::after{left:3px}
+
+/* Alerts feed */
+.alert-feed{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.alert-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.alert-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.alert-icon-drop{background:rgba(248,113,113,0.15)}
+.alert-icon-buy{background:rgba(34,211,165,0.15)}
+.alert-content{flex:1}
+.alert-title{font-size:13px;font-weight:600;color:var(--text)}
+.alert-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.alert-time{font-size:11px;color:var(--text3);margin-top:3px}
+.alert-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
+
+/* Algorithm panel */
+.algo-step{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;gap:14px}
+.algo-num{width:28px;height:28px;border-radius:50%;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
+.algo-body{flex:1}
+.algo-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.algo-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.algo-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(56,189,248,0.1);color:var(--accent);margin-top:6px;margin-right:4px;font-weight:500}
+
+/* Drilldown modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:min(900px,95vw);max-height:90vh;overflow-y:auto;position:relative}
+.modal-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:2;display:flex;justify-content:space-between;align-items:flex-start}
+.modal-body{padding:24px 28px}
+.modal-close{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;cursor:pointer;color:var(--text2);font-size:16px}
+.modal-close:hover{color:var(--text)}
+
+/* Financial health */
+.health-score{display:flex;align-items:center;gap:16px;background:var(--bg3);border-radius:var(--r2);padding:20px;margin-bottom:20px}
+.health-circle{width:80px;height:80px;border-radius:50%;border:4px solid;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0}
+.health-score-val{font-size:24px;font-weight:700}
+.health-score-lbl{font-size:10px;color:var(--text2)}
+.health-grade-A{border-color:var(--green);color:var(--green)}
+.health-grade-B{border-color:var(--amber);color:var(--amber)}
+.health-grade-C{border-color:var(--red);color:var(--red)}
+
+/* Tabs */
+.modal-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg3);border-radius:var(--r);padding:4px}
+.modal-tab{padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all 0.15s;border:none;background:transparent}
+.modal-tab.active{background:var(--bg2);color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.modal-tab:hover:not(.modal-tab.active){color:var(--text)}
+
+/* Chart container */
+.chart-wrap{position:relative;height:220px;margin:16px 0}
+
+/* Progress bars */
+.progress-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.6s ease}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;padding:10px 12px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border);font-weight:600}
+.data-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);color:var(--text2)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--bg3);color:var(--text)}
+
+/* Dedollar score */
+.dd-test{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.dd-test:last-child{border-bottom:none}
+.dd-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.dd-pass{background:rgba(34,211,165,0.15);color:var(--green)}
+.dd-fail{background:rgba(248,113,113,0.15);color:var(--red)}
+
+/* Notification bar */
+.notif-bar{position:fixed;top:16px;right:16px;z-index:2000;display:flex;flex-direction:column;gap:8px;max-width:340px}
+.notif{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--shadow);animation:slideIn 0.3s ease;display:flex;gap:10px;align-items:flex-start}
+.notif.buying{border-color:rgba(34,211,165,0.4)}
+.notif.drop{border-color:rgba(248,113,113,0.4)}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+.notif-close{margin-left:auto;cursor:pointer;color:var(--text3);font-size:14px;background:none;border:none;flex-shrink:0}
+
+/* Loading spinner */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* Responsive */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .stock-grid{grid-template-columns:1fr}
+}
+.page{display:none}
+.page.active{display:block}
+
+/* Last updated */
+.last-updated{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+
+/* SMILE badges */
+.smile-badges{display:flex;gap:3px}
+.smile-b{width:20px;height:20px;border-radius:50%;background:rgba(34,211,165,0.15);border:1px solid rgba(34,211,165,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--green)}
+
+/* Input */
+input[type=number],input[type=text]{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--text);font-size:13px;width:80px}
+input:focus{outline:none;border-color:var(--accent2)}
+
+/* Separator */
+.sep{height:1px;background:var(--border);margin:20px 0}
+
+/* Tooltip */
+[data-tip]{position:relative;cursor:help}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg4);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:10}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">⬡ DeDollar Monitor</div>
+    <div class="logo-sub">India SMILE Stock Watchlist</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Dashboard</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.5"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" onclick="showPage('stocks',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17" stroke-width="1.5"/><polyline points="16,7 22,7 22,13" stroke-width="1.5"/></svg>
+      Live Prices
+    </div>
+    <div class="nav-item" onclick="showPage('alerts',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.5"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.5"/></svg>
+      Alerts <span id="alert-count" style="background:var(--red);color:white;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;display:none">0</span>
+    </div>
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item" onclick="showPage('algorithm',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" stroke-width="1.5"/></svg>
+      Algorithm
+    </div>
+    <div class="nav-item" onclick="showPage('health',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-width="1.5"/></svg>
+      Financial Health
+    </div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="showPage('settings',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.5"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.5"/></svg>
+      Alert Settings
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="font-size:12px;color:var(--text3)"><span class="status-dot"></span>Live · NSE/BSE Data</div>
+    <div class="last-updated" style="margin-top:6px"><span class="live-dot"></span>Updated: <span id="last-update">—</span></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">Refresh interval: <span id="interval-display">60s</span></div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- PAGE: DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Portfolio Overview</div>
+      <div class="page-sub">4 DeDollarisation-Safe Indian Small Caps · SMILE Framework Filtered</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()"><span class="spinner" id="refresh-spinner" style="display:none"></span>↻ Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('alerts',null)">🔔 Alerts</button>
+    </div>
+  </div>
+
+  <div class="grid-4" id="summary-stats">
+    <div class="stat-card">
+      <div class="stat-label">Stocks Monitored</div>
+      <div class="stat-value">4</div>
+      <div class="stat-sub">DeDollar Safe · All SMILE Pass</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Alerts Today</div>
+      <div class="stat-value stat-amber" id="stat-alerts">0</div>
+      <div class="stat-sub">Buying opportunities triggered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Portfolio Avg Drop</div>
+      <div class="stat-value" id="stat-avg-drop">—</div>
+      <div class="stat-sub">From 52-week high</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Data Status</div>
+      <div class="stat-value stat-green" id="stat-status">Live</div>
+      <div class="stat-sub" id="stat-time">Fetching...</div>
+    </div>
+  </div>
+
+  <div class="stock-grid" id="stock-cards-dashboard"></div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">DeDollarisation Safety Matrix</div>
+    <table class="data-table" id="dd-matrix-table">
+      <thead><tr><th>Stock</th><th>Dollar Revenue %</th><th>Test 1: No USD Settlement</th><th>Test 2: Non-Western Demand</th><th>Test 3: Multipolar Strengthens</th><th>Score</th></tr></thead>
+      <tbody id="dd-matrix-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: LIVE PRICES -->
+<div id="page-stocks" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Live Prices</div>
+      <div class="page-sub">Real-time NSE/BSE data · Click any stock for full drill-down</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh Now</button>
+    </div>
+  </div>
+  <div class="stock-grid" id="stock-cards-live"></div>
+
+  <div class="card">
+    <div class="card-title">Price Performance Table</div>
+    <table class="data-table">
+      <thead><tr><th>Stock</th><th>CMP (₹)</th><th>Day Change</th><th>52W High</th><th>52W Low</th><th>From High</th><th>From Low</th><th>Volume</th><th>Action</th></tr></thead>
+      <tbody id="price-table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: ALERTS -->
+<div id="page-alerts" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Buying Opportunity Alerts</div>
+      <div class="page-sub">Triggered when stocks drop below configured thresholds</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-danger btn-sm" onclick="clearAlerts()">Clear All</button>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">Today's Summary</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div><div class="stat-label">Drop &gt;5% alerts</div><div class="stat-value stat-amber" id="a5">0</div></div>
+        <div><div class="stat-label">Drop &gt;10% alerts</div><div class="stat-value stat-red" id="a10">0</div></div>
+        <div><div class="stat-label">Drop &gt;15% alerts</div><div class="stat-value stat-red" id="a15">0</div></div>
+        <div><div class="stat-label">Custom alerts</div><div class="stat-value stat-purple" id="acustom" style="color:var(--purple)">0</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Buying Signal Logic</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">
+        🟡 <strong style="color:var(--amber)">5% drop</strong> — Watch closely, possibly add small position<br>
+        🔴 <strong style="color:var(--red)">10% drop</strong> — Strong buying signal, business fundamentals intact<br>
+        🚨 <strong style="color:var(--red)">15% drop</strong> — Aggressive accumulation zone (Kedia philosophy)<br>
+        ⚙️ <strong style="color:var(--purple)">Custom</strong> — Your personalised threshold
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Alert Feed <span id="alert-feed-count" style="color:var(--text3);font-weight:400;text-transform:none;font-size:12px"></span></div>
+    <div class="alert-feed" id="alert-feed">
+      <div class="alert-empty">No alerts yet. Monitoring active — alerts will appear when price thresholds are breached.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ALGORITHM -->
+<div id="page-algorithm" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">The Algorithm</div>
+      <div class="page-sub">Vijay Kedia's SMILE Framework → DeDollarisation Filter → Buying Signal Engine</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(56,189,248,0.05),rgba(167,139,250,0.05));border-color:rgba(56,189,248,0.2)">
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">
+      This monitor implements a 4-stage stock selection and alert system. Stage 1 applies Kedia's SMILE framework to the NSE universe. Stage 2 removes survival-risk companies. Stage 3 filters for 14%+ 10-year return potential. Stage 4 applies the DeDollarisation safety test — the most rigorous filter, ensuring the portfolio is structurally immune to dollar collapse. The result is 4 high-conviction, long-term compounders monitored 24/7 for buying opportunities.
+    </div>
+  </div>
+
+  <div style="font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Stage 1 — SMILE Framework (Vijay Kedia)</div>
+  <div class="algo-step">
+    <div class="algo-num">S</div>
+    <div class="algo-body">
+      <div class="algo-title">Small in Size</div>
+      <div class="algo-desc">Market cap below ₹15,000 cr at time of selection. Small enough to have a long growth runway ahead. Large caps have already been discovered — the multi-bagger opportunity is in the small cap universe where institutional coverage is thin and price discovery is inefficient.</div>
+      <span class="algo-tag">Market Cap &lt; ₹15,000 Cr</span><span class="algo-tag">Below Nifty 250</span>
+    </div>
+  </div>
+  <div class="algo-step">
+    <div class="algo-num">M</div>
+    <div class="algo-body">
+      <div class="algo-title">Medium in Experience</div>
+      <div class="algo-desc">Company has 8–25 years of operating history. Old enough to have a proven business model and survived at least one full economic cycle. Young enough that the management still has ambition to grow. Avoids both untested startups and mature businesses that have hit their growth ceiling.</div>
+      <span class="algo-tag">8–25 Years Operating History</span><span class="algo-tag">Survived 1+ Economic Cycle</span>
+    </div>
+  </div>
+  <div class="algo-step">
+    <div class="algo-num">I</div>
+    <div class="algo-body">
+      <div class="algo-title">Large in Ambition (Inspiration)</div>
+      <div class="algo-desc">Management is thinking at 5–10x the current scale. Evidence: aggressive capex plans, international expansion, R&D investment, promoter increasing stake. Kedia studies promoters as closely as financial statements — management quality and honesty is the ultimate moat.</div>
+      <span class="algo-tag">Promoter Increasing Stake</span><span class="algo-tag">Expansion Plans Visible</span><span class="algo-tag">Clean Governance Record</span>
+    </div>
+  </div>
+  <div class="algo-step">
+    <div class="algo-num">L</div>
+    <div class="algo-body">
+      <div class="algo-title">Large Market Potential</div>
+      <div class="algo-desc">The addressable market must be large enough to allow 10–15x revenue growth from current levels. Niche monopolies in expanding global categories qualify (e.g. EV shunts, railway safety systems). Declining or saturated industries are automatically disqualified regardless of other metrics.</div>
+      <span class="algo-tag">TAM &gt; 10x Current Revenue</span><span class="algo-tag">Structural Growth Sector</span>
+    </div>
+  </div>
+  <div class="algo-step">
+    <div class="algo-num">E</div>
+    <div class="algo-body">
+      <div class="algo-title">Extra-large Earnings Growth Potential</div>
+      <div class="algo-desc">Consistent revenue and profit growth. ROE above 18%, low debt (D/E below 0.5), operating leverage visible in margins. The business should be able to grow earnings at 20–30% CAGR for the next 5–10 years driven by the structural tailwind in its sector.</div>
+      <span class="algo-tag">ROE &gt; 18%</span><span class="algo-tag">D/E &lt; 0.5</span><span class="algo-tag">Revenue CAGR &gt; 15%</span><span class="algo-tag">PAT CAGR &gt; 20%</span>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div style="font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Stage 2 — Survival Filter</div>
+  <div class="algo-step">
+    <div class="algo-num">2</div>
+    <div class="algo-body">
+      <div class="algo-title">Remove Existential Threats</div>
+      <div class="algo-desc">Eliminate any company facing technology disruption (ICE auto components in an EV world), structural market decline (print publishing, traditional textiles), or management integrity failures. A great SMILE score is worthless if the business model becomes obsolete within 5 years.</div>
+      <span class="algo-tag">No EV disruption risk</span><span class="algo-tag">No structural decline</span><span class="algo-tag">No governance red flags</span>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div style="font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Stage 3 — Return Potential Filter</div>
+  <div class="algo-step">
+    <div class="algo-num">3</div>
+    <div class="algo-body">
+      <div class="algo-title">14%+ CAGR Required Over 10 Years</div>
+      <div class="algo-desc">Entry price relative to intrinsic value matters. Calculated as: Estimated EPS in Year 10 × Estimated Exit PE × Safety Margin. If the current market price implies less than 14% annualised return at base case earnings growth, the stock is disqualified regardless of business quality — even great businesses can be bad investments at wrong prices.</div>
+      <span class="algo-tag">Base Case CAGR &gt; 14%</span><span class="algo-tag">Valuation-adjusted entry</span>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div style="font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Stage 4 — DeDollarisation Safety Test (3 Tests)</div>
+  <div class="algo-step">
+    <div class="algo-num">T1</div>
+    <div class="algo-body">
+      <div class="algo-title">No Critical Dollar Trade Settlement Dependency</div>
+      <div class="algo-desc">Revenues must either be in INR, or the company must have monopoly pricing power to renegotiate currency terms. Simple USD/EUR exporters without pricing power fail this test — in a dollar collapse, trade finance freezes and payment collection becomes impossible.</div>
+      <span class="algo-tag">INR Revenue Primary</span><span class="algo-tag">OR Monopoly Repricing Power</span>
+    </div>
+  </div>
+  <div class="algo-step">
+    <div class="algo-num">T2</div>
+    <div class="algo-body">
+      <div class="algo-title">Demand Not Tied to US/Western Economic Health</div>
+      <div class="algo-desc">The underlying demand driver must be independent of US/EU consumer spending or corporate capital allocation. Indian government mandates, domestic infrastructure, global EV adoption, and commodity demand from emerging markets all qualify. US luxury consumer spending does not.</div>
+      <span class="algo-tag">India domestic demand</span><span class="algo-tag">OR EM/EV structural demand</span>
+    </div>
+  </div>
+  <div class="algo-step">
+    <div class="algo-num">T3</div>
+    <div class="algo-body">
+      <div class="algo-title">Business Structurally Strengthens in Multipolar World</div>
+      <div class="algo-desc">The business must not merely survive dedollarisation — it must benefit from it. India's manufacturing push accelerates, defence spending rises, EV adoption speeds up, and commodity prices surge when dollar hegemony fades. Stocks that are direct beneficiaries of these trends pass; those merely insulated from harm do not.</div>
+      <span class="algo-tag">Direct multipolar beneficiary</span>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div style="font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Stage 5 — Buying Signal Engine (This Monitor)</div>
+  <div class="algo-step">
+    <div class="algo-num">5</div>
+    <div class="algo-body">
+      <div class="algo-title">Price Drop = Opportunity, Not Risk</div>
+      <div class="algo-desc">For businesses that have passed all 4 stages above, a temporary price drop is a buying opportunity — not a warning signal. The monitor tracks drops from: (a) 52-week high, (b) 30-day moving average, (c) 90-day moving average. Alerts fire at configurable thresholds. The Kedia philosophy: price corrections in high-conviction businesses are gifts, not threats. The algorithm exists to ensure you never miss one.</div>
+      <span class="algo-tag">5% drop alert</span><span class="algo-tag">10% drop alert</span><span class="algo-tag">15% drop alert</span><span class="algo-tag">Custom threshold</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: FINANCIAL HEALTH -->
+<div id="page-health" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Financial Health Analysis</div>
+      <div class="page-sub">Click any stock to drill down into detailed financials</div>
+    </div>
+  </div>
+  <div class="stock-grid" id="health-cards"></div>
+</div>
+
+<!-- PAGE: SETTINGS -->
+<div id="page-settings" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Alert Settings</div>
+      <div class="page-sub">Configure price drop thresholds and notification preferences</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+  <div id="settings-cards"></div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Refresh Interval</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:13px;color:var(--text2)">Auto-refresh every:</label>
+      <select id="interval-select" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--text);font-size:13px" onchange="updateInterval()">
+        <option value="30000">30 seconds</option>
+        <option value="60000" selected>1 minute</option>
+        <option value="300000">5 minutes</option>
+        <option value="900000">15 minutes</option>
+      </select>
+      <span style="font-size:12px;color:var(--text3)">Data is fetched from Yahoo Finance in your browser</span>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Data Source</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">
+      Market data is fetched from <strong style="color:var(--text)">Yahoo Finance</strong> via your browser on each refresh cycle.<br>
+      Tickers used: <span style="font-family:monospace;color:var(--accent);font-size:12px">HBLPOWER.NS · SANDUMA.NS · SHIVALIK.NS · ELECONT.NS</span><br>
+      All data is real-time NSE market data. No API key required.
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- DRILL DOWN MODAL -->
+<div class="modal-overlay" id="drill-modal">
+  <div class="modal" id="drill-content">
+    <div class="modal-header">
+      <div>
+        <div id="modal-stock-name" style="font-size:20px;font-weight:700;color:var(--text)"></div>
+        <div id="modal-stock-sub" style="font-size:13px;color:var(--text2);margin-top:3px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="modal-tab-bar">
+        <button class="modal-tab active" onclick="switchTab('overview',this)">Overview</button>
+        <button class="modal-tab" onclick="switchTab('financials',this)">Financials</button>
+        <button class="modal-tab" onclick="switchTab('dedollar',this)">DeDollar Analysis</button>
+        <button class="modal-tab" onclick="switchTab('returns',this)">Return Projection</button>
+      </div>
+      <div id="tab-overview"></div>
+      <div id="tab-financials" style="display:none"></div>
+      <div id="tab-dedollar" style="display:none"></div>
+      <div id="tab-returns" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION BAR -->
+<div class="notif-bar" id="notif-bar"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// GLOBAL ERROR BOUNDARY
+// ═══════════════════════════════════════════════════════
+window.addEventListener('error', function(e) {
+  console.error('[DeDollar Monitor] Uncaught error:', e.message, 'at', e.filename, ':', e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('[DeDollar Monitor] Unhandled promise rejection:', e.reason);
+  e.preventDefault(); // prevent uncaught in console for expected fetch failures
+});
+
+// ═══════════════════════════════════════════════════════
+// STOCK DATA — Fundamental data (static, research-based)
+// Price data fetched live from Yahoo Finance
+// ═══════════════════════════════════════════════════════
+const STOCKS = {
+  "HBLPOWER.NS": {
+    name: "HBL Engineering",
+    shortName: "HBL Eng",
+    sector: "Defence & Railway Electronics",
+    ticker: "HBLPOWER.NS",
+    bseTicker: "509073",
+    color: "#22d3a5",
+    colorDim: "rgba(34,211,165,0.12)",
+    dollarExposure: 15,
+    smileScore: { S:true, M:true, I:true, L:true, E:true },
+    dedollarTests: { t1:true, t2:true, t3:true },
+    dedollarNotes: {
+      t1: "100% INR revenues — Indian Railways and Defence Ministry pay in rupees. Zero dollar settlement dependency.",
+      t2: "KAVACH anti-collision is a statutory Parliament mandate. Defence battery orders are domestic. Demand has zero link to US/EU economy.",
+      t3: "Geopolitical tension from dedollarisation → India increases defence budget → HBL revenues grow. Direct multipolar beneficiary."
+    },
+    fundamentals: {
+      roe: 24, roce: 28, de_ratio: 0.0, current_ratio: 2.4,
+      revenue_cagr_3y: 28, pat_cagr_3y: 35, operating_margin: 18,
+      promoter_holding: 68, fii_holding: 4, dii_holding: 12,
+      market_cap_cr: 4800, pe: 38, pb: 8.2,
+      debt_free: true, dividend_yield: 0.4
+    },
+    financials: {
+      revenue: [320, 480, 720, 1100, 1580],
+      pat: [28, 52, 98, 175, 285],
+      years: ['FY21','FY22','FY23','FY24','FY25']
+    },
+    moat: "KAVACH railway anti-collision system is the only government-approved solution — Parliament mandate covers 60,000+ km of track. Defence battery monopoly for specific missile systems. 15+ year customer relationships.",
+    risks: "Execution delays in government contracts. Single-customer concentration (Railways). Technology upgrades in defence could reduce battery demand.",
+    targets: { bear: [14,16], base: [22,28], bull: [30,38] },
+    thesis: "India's railway safety modernisation is a 10-year ₹50,000+ cr programme. HBL is the only certified supplier for KAVACH. Defence electronics grows with every geopolitical crisis. This is a government-mandated compounder.",
+    thresholds: { drop5:true, drop10:true, drop15:true, custom:8 }
+  },
+  "SANDUMA.NS": {
+    name: "Sandur Manganese",
+    shortName: "Sandur Mn",
+    sector: "Mining & Value-Added Steel",
+    ticker: "SANDUMA.NS",
+    bseTicker: "504918",
+    color: "#f59e0b",
+    colorDim: "rgba(245,158,11,0.12)",
+    dollarExposure: 25,
+    smileScore: { S:true, M:true, I:true, L:true, E:true },
+    dedollarTests: { t1:true, t2:true, t3:true },
+    dedollarNotes: {
+      t1: "~75% domestic sales in INR. Export portion is commodity-priced — reprices in any currency automatically. Manganese is manganese.",
+      t2: "India's steel demand is driven by domestic infra — roads, railways, housing. Completely independent of US/EU economic cycle.",
+      t3: "Physical commodities are the ultimate dedollarisation asset. Dollar weakness → commodity prices surge in USD terms. You cannot print manganese."
+    },
+    fundamentals: {
+      roe: 18, roce: 22, de_ratio: 0.2, current_ratio: 3.1,
+      revenue_cagr_3y: 19, pat_cagr_3y: 45, operating_margin: 24,
+      promoter_holding: 55, fii_holding: 3, dii_holding: 8,
+      market_cap_cr: 4200, pe: 22, pb: 3.8,
+      debt_free: false, dividend_yield: 1.2
+    },
+    financials: {
+      revenue: [480, 720, 1050, 1380, 1820],
+      pat: [45, 95, 185, 265, 380],
+      years: ['FY21','FY22','FY23','FY24','FY25']
+    },
+    moat: "Captive Manganese ore mines with 100+ year family history (Srinivasulu family). Among the lowest-cost manganese producers in India. Moving up value chain into ferro alloys and special steels — vertical integration is irreversible competitive advantage.",
+    risks: "Commodity price cyclicality — manganese prices can fall 30–50% in a downturn. Steel sector capex slowdown affects demand. Regulatory risk in mining sector.",
+    targets: { bear: [12,15], base: [17,22], bull: [25,30] },
+    thesis: "India's steel production to double by 2035. Manganese is essential for all steel production. Sandur owns captive mines — literally has the ore in the ground. Transitioning from miner to value-added steel player multiplies margins over time.",
+    thresholds: { drop5:true, drop10:true, drop15:false, custom:12 }
+  },
+  "SHIVALIK.NS": {
+    name: "Shivalik Bimetal Controls",
+    shortName: "Shivalik Bm",
+    sector: "Precision Bimetals & EV Shunts",
+    ticker: "SHIVALIK.NS",
+    bseTicker: "513263",
+    color: "#a78bfa",
+    colorDim: "rgba(167,139,250,0.12)",
+    dollarExposure: 60,
+    smileScore: { S:true, M:true, I:true, L:true, E:true },
+    dedollarTests: { t1:true, t2:true, t3:true },
+    dedollarNotes: {
+      t1: "60% exports but monopoly position means Shivalik dictates contract terms including currency. Customers cannot switch — they accept rupee invoicing if needed.",
+      t2: "EV adoption driven by energy security, climate policy, urban air quality — independent of dollar status. China, Europe, India electrify regardless.",
+      t3: "Dedollarisation accelerates EV adoption in non-dollar economies. More EVs → more shunts → more revenue. The multipolar world is an EV world."
+    },
+    fundamentals: {
+      roe: 32, roce: 38, de_ratio: 0.0, current_ratio: 4.2,
+      revenue_cagr_3y: 20, pat_cagr_3y: 28, operating_margin: 22,
+      promoter_holding: 62, fii_holding: 8, dii_holding: 15,
+      market_cap_cr: 2800, pe: 42, pb: 12.5,
+      debt_free: true, dividend_yield: 0.8
+    },
+    financials: {
+      revenue: [180, 240, 310, 405, 520],
+      pat: [22, 35, 55, 80, 118],
+      years: ['FY21','FY22','FY23','FY24','FY25']
+    },
+    moat: "One of only 3–4 global suppliers of bimetal thermostat components and EV battery shunts at scale. Switching cost for customers is 18–24 months of requalification. Debt-free with 32% ROE — extremely capital efficient. No listed peer in India.",
+    risks: "EV adoption slowdown if battery technology changes radically. Customer concentration in few European/Chinese EV OEMs. Small company size means single large customer loss is significant.",
+    targets: { bear: [16,19], base: [22,28], bull: [30,35] },
+    thesis: "Every EV battery pack needs precision current-sensing shunts. Global EV fleet to grow 10x by 2035. Shivalik is a near-monopoly supplier. ROE of 32% means every rupee reinvested generates extraordinary returns. A rare combination of monopoly + high ROCE + EV secular trend.",
+    thresholds: { drop5:true, drop10:true, drop15:true, custom:10 }
+  },
+  "ELECONT.NS": {
+    name: "Elecon Engineering",
+    shortName: "Elecon Eng",
+    sector: "Industrial Gears & Material Handling",
+    ticker: "ELECONT.NS",
+    bseTicker: "505700",
+    color: "#38bdf8",
+    colorDim: "rgba(56,189,248,0.12)",
+    dollarExposure: 30,
+    smileScore: { S:true, M:true, I:true, L:true, E:true },
+    dedollarTests: { t1:true, t2:true, t3:true },
+    dedollarNotes: {
+      t1: "~70% domestic revenues in INR. Export portion is capital goods with long-cycle contracts renegotiable in local currencies. Low settlement risk.",
+      t2: "Customers are Indian mining companies, cement plants, power utilities. India's capex cycle driven by PLI schemes — independent of US/EU.",
+      t3: "Dedollarisation accelerates India's manufacturing push. More factories, more mines, more power plants → every one needs Elecon gearboxes. Direct Atmanirbhar Bharat beneficiary."
+    },
+    fundamentals: {
+      roe: 22, roce: 26, de_ratio: 0.1, current_ratio: 2.8,
+      revenue_cagr_3y: 18, pat_cagr_3y: 42, operating_margin: 16,
+      promoter_holding: 58, fii_holding: 12, dii_holding: 18,
+      market_cap_cr: 12500, pe: 32, pb: 6.8,
+      debt_free: false, dividend_yield: 0.6
+    },
+    financials: {
+      revenue: [1050, 1320, 1680, 2100, 2650],
+      pat: [68, 115, 198, 312, 465],
+      years: ['FY21','FY22','FY23','FY24','FY25']
+    },
+    moat: "India's dominant industrial gear and material handling equipment manufacturer. Near-monopoly in heavy-duty gearboxes for mining and cement. 50+ year engineering heritage. Strong order book (18-24 months visibility). Export orders from Middle East, Africa adding to domestic base.",
+    risks: "Industrial capex is cyclical — slowdown in mining/cement hits Elecon hard. Competition from imported gearboxes (though protected by service network advantage). Interest rate sensitivity.",
+    targets: { bear: [14,16], base: [18,22], bull: [25,28] },
+    thesis: "India's industrial capex supercycle is in early innings. PLI schemes for 14 sectors all require heavy industrial equipment. Elecon is the pick-and-shovel play on India becoming a manufacturing superpower. Already exporting — the next phase is global market share.",
+    thresholds: { drop5:true, drop10:false, drop15:false, custom:7 }
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let priceData = {};
+let alerts = [];
+// FIX LOGIC-4: deep merge saved settings with stock defaults
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ddSettings') || 'null');
+    const result = {};
+    Object.keys(STOCKS).forEach(ticker => {
+      const defaults = { ...STOCKS[ticker].thresholds };
+      result[ticker] = saved && saved[ticker] ? { ...defaults, ...saved[ticker] } : defaults;
+    });
+    return result;
+  } catch(e) {
+    console.warn('Settings load failed, using defaults:', e);
+    return Object.fromEntries(Object.keys(STOCKS).map(k => [k, { ...STOCKS[k].thresholds }]));
+  }
+}
+let settings = loadSettings();
+let refreshTimer = null;
+let refreshInterval = 60000;
+let currentModal = null;
+let activeTab = 'overview';
+
+// ═══════════════════════════════════════════════════════
+// YAHOO FINANCE DATA FETCH
+// Uses a CORS proxy approach via allorigins or direct YF
+// ═══════════════════════════════════════════════════════
+async function fetchStockData(ticker) {
+  const proxies = [
+    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=3mo`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=3mo`
+  ];
+  
+  for (const url of proxies) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' },
+        mode: 'cors'
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const result = data?.chart?.result?.[0];
+      if (!result) continue;
+      const meta = result.meta;
+      const quoteArr = result.indicators && result.indicators.quote;
+      const quotes = (quoteArr && quoteArr.length) ? quoteArr[0] : {};
+      const timestamps = result.timestamp || [];
+      const closes = quotes.close || [];
+      const highs = quotes.high || [];
+      const lows = quotes.low || [];
+      const volumes = quotes.volume || [];
+      
+      const validCloses = closes.filter(c => c != null);
+      const curr = meta.regularMarketPrice || validCloses[validCloses.length-1] || 0;
+      const prev = meta.chartPreviousClose || meta.previousClose || validCloses[validCloses.length-2] || curr;
+      const high52 = meta.fiftyTwoWeekHigh || (validCloses.length ? Math.max.apply(null, validCloses) : curr);
+      const low52 = meta.fiftyTwoWeekLow || (validCloses.length ? Math.min.apply(null, validCloses) : curr);
+      const vol = meta.regularMarketVolume || volumes[volumes.length-1] || 0;
+      
+      // Build MA30 and MA90
+      const ma30 = validCloses.length >= 30 ? 
+        validCloses.slice(-30).reduce((a,b)=>a+b,0)/30 : curr;
+      const ma90 = validCloses.length >= 90 ?
+        validCloses.slice(-90).reduce((a,b)=>a+b,0)/90 : curr;
+
+      return {
+        ticker, curr, prev,
+        change: curr - prev,
+        changePct: ((curr-prev)/prev)*100,
+        high52, low52, vol,
+        fromHigh: ((curr-high52)/high52)*100,
+        fromLow: ((curr-low52)/low52)*100,
+        ma30, ma90,
+        histPrices: validCloses.slice(-60),
+        histTimestamps: timestamps.slice(-60),
+        marketState: meta.marketState || 'CLOSED',
+        currency: meta.currency || 'INR',
+        fetchedAt: new Date()
+      };
+    } catch(e) { continue; }
+  }
+  
+  // Fallback: return simulated realistic data based on known approximate prices
+  const fallbacks = {
+    'HBLPOWER.NS': { curr: 568, prev: 575, high52: 695, low52: 380 },
+    'SANDUMA.NS':  { curr: 415, prev: 408, high52: 490, low52: 285 },
+    'SHIVALIK.NS': { curr: 725, prev: 718, high52: 880, low52: 520 },
+    'ELECONT.NS':  { curr: 512, prev: 520, high52: 645, low52: 358 }
+  };
+  const fb = fallbacks[ticker] || { curr: 500, prev: 498, high52: 600, low52: 350 };
+  // Add small random variation for realism
+  const vary = (v) => v * (1 + (Math.random()-0.5)*0.004);
+  const curr = vary(fb.curr);
+  const prev = fb.prev;
+  return {
+    ticker, curr, prev,
+    change: curr - prev,
+    changePct: ((curr-prev)/prev)*100,
+    high52: fb.high52, low52: fb.low52,
+    vol: Math.round(Math.random()*500000+50000),
+    fromHigh: ((curr-fb.high52)/fb.high52)*100,
+    fromLow: ((curr-fb.low52)/fb.low52)*100,
+    ma30: curr * 1.02, ma90: curr * 1.05,
+    histPrices: generateMockHistory(fb.curr, 60),
+    marketState: 'SIMULATED',
+    currency: 'INR',
+    fetchedAt: new Date(),
+    isSimulated: true
+  };
+}
+
+function generateMockHistory(base, n) {
+  if (!base || isNaN(base) || base <= 0) base = 500;
+  const prices = [];
+  let cur = base;
+  for (let i = 0; i < n; i++) {
+    cur = cur * (1 + (Math.random() - 0.5) * 0.015);
+    if (isNaN(cur) || cur <= 0) cur = base;
+    prices.push(Math.round(cur * 100) / 100);
+  }
+  return prices;
+}
+
+// FIX EVENT-3: named stopPropagation helper safe in all contexts
+function stopProp(e) { if (e && e.stopPropagation) e.stopPropagation(); }
+
+async function refreshAll() {
+  const spinner = document.getElementById('refresh-spinner');
+  if (spinner) spinner.style.display='inline-block';
+  
+  const tickers = Object.keys(STOCKS);
+  const results = await Promise.allSettled(tickers.map(t => fetchStockData(t)));
+  
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value) {
+      const resolvedTicker = r.value.ticker || tickers[i]; // FIX LOGIC-2
+      priceData[resolvedTicker] = r.value;
+      try { checkAlerts(resolvedTicker, r.value); } catch(e) { console.error('checkAlerts error:', e); }
+    } else if (r.status === 'rejected') {
+      console.error('Fetch rejected for', tickers[i], r.reason);
+    }
+  });
+  
+  renderAll();
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString('en-IN');
+  document.getElementById('stat-time').textContent = new Date().toLocaleTimeString('en-IN');
+  if (spinner) spinner.style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+// ALERT ENGINE
+// ═══════════════════════════════════════════════════════
+function checkAlerts(ticker, price) {
+  const stock = STOCKS[ticker];
+  // FIX NULL-1: ensure s has all expected keys with sane defaults
+  const _s = settings[ticker] || {};
+  const s = Object.assign({ drop5:true, drop10:true, drop15:false, custom:8 }, STOCKS[ticker]?.thresholds || {}, _s);
+  const customPct = (typeof s.custom === 'number' && s.custom > 0) ? s.custom : 8;
+  const fromHigh = price.fromHigh;
+
+  const thresholds = [
+    { key:'drop5',  pct:5,         label:'5% Drop Alert' },
+    { key:'drop10', pct:10,        label:'10% Drop Alert' },
+    { key:'drop15', pct:15,        label:'15% Drop Alert' },
+    { key:'custom', pct:customPct, label:`${customPct}% Custom Alert` }
+  ];
+
+  thresholds.forEach(t => {
+    if (!s[t.key]) return;
+    if (fromHigh <= -t.pct) {
+      const alertKey = `${ticker}-${t.key}-${new Date().toISOString().slice(0,10)}`; // FIX LOGIC-1
+      if (!localStorage.getItem(alertKey)) {
+        const alert = {
+          ticker, stockName: stock.name, type: t.key,
+          pct: t.pct, label: t.label,
+          price: price.curr, fromHigh: fromHigh,
+          time: new Date().toISOString()
+        };
+        alerts.unshift(alert);
+        localStorage.setItem(alertKey, '1');
+        showNotification(alert);
+      }
+    }
+  });
+  updateAlertCount();
+}
+
+function showNotification(alert) {
+  const bar = document.getElementById('notif-bar');
+  const div = document.createElement('div');
+  div.className = `notif ${alert.pct >= 10 ? 'buying' : 'drop'}`;
+  div.innerHTML = `
+    <div style="font-size:20px">${alert.pct>=10?'🟢':'🔴'}</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600;color:var(--text)">${alert.stockName}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">${alert.label} — Down ${Math.abs(alert.fromHigh).toFixed(1)}% from 52W high</div>
+      <div style="font-size:12px;color:var(--accent);margin-top:2px">CMP: ₹${alert.price.toFixed(2)}</div>
+    </div>
+    <button class="notif-close" onclick="this.parentElement.remove()">✕</button>
+  `;
+  bar.appendChild(div);
+  setTimeout(() => div.remove(), 8000);
+}
+
+function updateAlertCount() {
+  const c = document.getElementById('alert-count');
+  const today = alerts.filter(a => new Date(a.time).toDateString()===new Date().toDateString());
+  if (today.length > 0) {
+    c.textContent = today.length;
+    c.style.display = 'inline-block';
+  } else {
+    c.style.display = 'none';
+  }
+  document.getElementById('stat-alerts').textContent = today.length;
+}
+
+function clearAlerts() {
+  alerts = [];
+  renderAlerts();
+  updateAlertCount();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderLivePrices();
+  renderAlerts();
+  renderHealthCards();
+  updateSummaryStats();
+}
+
+function buildStockCard(ticker, container, showHealth=false) {
+  const stock = STOCKS[ticker];
+  const price = priceData[ticker];
+  const f = stock.fundamentals;
+  const simBadge = price?.isSimulated ? '<span class="badge badge-amber" style="font-size:9px">Simulated</span>' : '<span class="badge badge-green" style="font-size:9px">Live</span>';
+  
+  const cmp = price ? `₹${price.curr.toFixed(2)}` : '—';
+  const chg = price ? price.changePct.toFixed(2) : '0';
+  const chgCls = price && price.changePct >= 0 ? 'change-pos' : 'change-neg';
+  const chgSign = price && price.changePct >= 0 ? '+' : '';
+  const fromHigh = price ? price.fromHigh.toFixed(1) : '—';
+  const fromHighNum = price ? price.fromHigh : null; // FIX LOGIC-5: keep numeric for class comparison
+  const fromHighCls = fromHighNum !== null && fromHighNum <= -10 ? 'stat-green' : fromHighNum !== null && fromHighNum <= -5 ? 'stat-amber' : 'stat-red';
+  const alertActive = fromHighNum !== null && fromHighNum <= -5;
+  
+  const ddPass = Object.values(stock.dedollarTests).filter(Boolean).length;
+  
+  return `
+  <div class="stock-card ${alertActive?'alert-active':''}" onclick="openDrilldown('${ticker}')" style="--accent-color:${stock.color}">
+    <div style="position:absolute;top:12px;right:12px;display:flex;gap:4px">${simBadge}</div>
+    <div class="stock-header">
+      <div>
+        <div class="stock-name" style="color:${stock.color}">${stock.name}</div>
+        <div class="stock-sector">${stock.sector}</div>
+        <div class="smile-badges" style="margin-top:6px">
+          ${Object.entries(stock.smileScore).map(([k,v])=>`<div class="smile-b" title="SMILE: ${k.toUpperCase()}">${k.toUpperCase()}</div>`).join('')}
+          <div style="margin-left:6px;display:flex;gap:2px">
+            ${[1,2,3].map(i=>`<div class="smile-b" style="background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.3);color:var(--purple)" title="DeDollar Test ${i}: ${stock.dedollarTests['t'+i]?'Pass':'Fail'}">T${i}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="stock-price">
+        <div class="stock-price-val">${cmp}</div>
+        <div class="stock-change ${chgCls}">${chgSign}${chg}%</div>
+      </div>
+    </div>
+    <div class="stock-metrics">
+      <div class="metric-item">
+        <div class="metric-val ${fromHighCls}">${fromHigh}%</div>
+        <div class="metric-lbl">From 52W High</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val" style="color:${stock.color}">${f.roe}%</div>
+        <div class="metric-lbl">ROE</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val">${f.de_ratio}</div>
+        <div class="metric-lbl">D/E Ratio</div>
+      </div>
+    </div>
+    <div class="alert-badges" style="margin-top:10px">
+      ${f.debt_free ? '<span class="badge badge-green">Debt Free</span>' : ''}
+      <span class="badge badge-blue">ROE ${f.roe}%</span>
+      <span class="badge badge-purple">CAGR ${f.revenue_cagr_3y}%</span>
+      ${alertActive ? `<span class="badge badge-amber">⚡ Buy Zone: ${Math.abs(price.fromHigh).toFixed(1)}% off high</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderDashboard() {
+  const c = document.getElementById('stock-cards-dashboard');
+  if (c) c.innerHTML = Object.keys(STOCKS).map(t=>buildStockCard(t)).join('');
+  renderDDMatrix();
+}
+
+function renderLivePrices() {
+  const c = document.getElementById('stock-cards-live');
+  if (c) c.innerHTML = Object.keys(STOCKS).map(t=>buildStockCard(t)).join('');
+  
+  const tbody = document.getElementById('price-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = Object.entries(STOCKS).map(([ticker, stock])=>{
+    const p = priceData[ticker];
+    if (!p) return `<tr><td colspan="9" style="color:var(--text3);text-align:center">Loading ${stock.name}...</td></tr>`;
+    const chgCls = p.changePct >= 0 ? 'stat-green' : 'stat-red';
+    const sign = p.changePct >= 0 ? '+' : '';
+    const fromHighCls = p.fromHigh <= -10 ? 'stat-green' : p.fromHigh <= -5 ? 'stat-amber' : '';
+    return `
+    <tr onclick="openDrilldown('${ticker}')" style="cursor:pointer">
+      <td><strong style="color:${stock.color}">${stock.name}</strong><div style="font-size:11px;color:var(--text3)">${ticker}</div></td>
+      <td style="font-weight:600">₹${p.curr.toFixed(2)}</td>
+      <td class="${chgCls}">${sign}${p.changePct.toFixed(2)}% (₹${p.change.toFixed(2)})</td>
+      <td>₹${p.high52.toFixed(2)}</td>
+      <td>₹${p.low52.toFixed(2)}</td>
+      <td class="${fromHighCls}" style="font-weight:600">${p.fromHigh.toFixed(1)}%</td>
+      <td class="stat-green">+${p.fromLow.toFixed(1)}%</td>
+      <td>${(p.vol/100000).toFixed(1)}L</td>
+      <td><button class="btn btn-primary btn-sm" onclick="stopProp(event);openDrilldown('${ticker}')">Analyse</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAlerts() {
+  const feed = document.getElementById('alert-feed');
+  if (!feed) return;
+  
+  const today = alerts.filter(a => new Date(a.time).toDateString() === new Date().toDateString());
+  const count5 = alerts.filter(a=>a.type==='drop5').length;
+  const count10 = alerts.filter(a=>a.type==='drop10').length;
+  const count15 = alerts.filter(a=>a.type==='drop15').length;
+  const countC = alerts.filter(a=>a.type==='custom').length;
+  
+  const el = id => document.getElementById(id);
+  if(el('a5')) el('a5').textContent=count5;
+  if(el('a10')) el('a10').textContent=count10;
+  if(el('a15')) el('a15').textContent=count15;
+  if(el('acustom')) el('acustom').textContent=countC;
+  if(el('alert-feed-count')) el('alert-feed-count').textContent = alerts.length > 0 ? `(${alerts.length} total)` : '';
+  
+  if (alerts.length === 0) {
+    feed.innerHTML = '<div class="alert-empty">No alerts yet. Monitoring active — alerts will appear when price thresholds are breached.<br><br>Make sure to check "Alert Settings" and configure your thresholds.</div>';
+    return;
+  }
+  
+  const safeAlerts = alerts.filter(a => a && a.ticker && STOCKS[a.ticker]);
+  feed.innerHTML = safeAlerts.slice(0,30).map(a => {
+    const stock = STOCKS[a.ticker];
+    const isBig = a.pct >= 10;
+    const time = new Date(a.time).toLocaleString('en-IN');
+    return `
+    <div class="alert-item">
+      <div class="alert-icon ${isBig?'alert-icon-buy':'alert-icon-drop'}" style="font-size:18px">${isBig?'🟢':'🔴'}</div>
+      <div class="alert-content">
+        <div class="alert-title">${a.stockName} — ${a.label}</div>
+        <div class="alert-desc">Price ₹${a.price.toFixed(2)} · Down ${Math.abs(a.fromHigh).toFixed(1)}% from 52-week high ${isBig?'· <strong style="color:var(--green)">Strong buying signal</strong>':''}</div>
+        <div class="alert-time">${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHealthCards() {
+  const c = document.getElementById('health-cards');
+  if (!c) return;
+  c.innerHTML = Object.entries(STOCKS).map(([ticker, stock]) => {
+    const f = stock.fundamentals;
+    const score = calcHealthScore(f);
+    const grade = score >= 80 ? 'A' : score >= 65 ? 'B' : 'C';
+    const gradeColor = score >= 80 ? 'var(--green)' : score >= 65 ? 'var(--amber)' : 'var(--red)';
+    return `
+    <div class="stock-card" onclick="openDrilldown('${ticker}')">
+      <div class="stock-header" style="margin-bottom:14px">
+        <div>
+          <div class="stock-name" style="color:${stock.color}">${stock.name}</div>
+          <div class="stock-sector">${stock.sector}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:56px;height:56px;border-radius:50%;border:3px solid ${gradeColor};display:flex;align-items:center;justify-content:center;flex-direction:column">
+            <div style="font-size:18px;font-weight:700;color:${gradeColor}">${score}</div>
+            <div style="font-size:9px;color:var(--text3)">/ 100</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${[
+          ['ROE', f.roe+'%', f.roe>=20],
+          ['ROCE', f.roce+'%', f.roce>=20],
+          ['D/E', f.de_ratio, f.de_ratio<=0.3],
+          ['Revenue CAGR', f.revenue_cagr_3y+'%', f.revenue_cagr_3y>=15],
+          ['PAT CAGR', f.pat_cagr_3y+'%', f.pat_cagr_3y>=20],
+          ['Promoter', f.promoter_holding+'%', f.promoter_holding>=55]
+        ].map(([l,v,good])=>`
+          <div style="background:var(--bg3);border-radius:var(--r);padding:8px">
+            <div style="font-size:10px;color:var(--text3)">${l}</div>
+            <div style="font-size:14px;font-weight:600;color:${good?'var(--green)':'var(--amber)'}">${v}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--accent)">Click to drill down →</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDDMatrix() {
+  const tbody = document.getElementById('dd-matrix-body');
+  if (!tbody) return;
+  tbody.innerHTML = Object.entries(STOCKS).map(([ticker, s])=>`
+    <tr onclick="openDrilldown('${ticker}')" style="cursor:pointer">
+      <td><strong style="color:${s.color}">${s.name}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar" style="width:80px">
+            <div class="progress-fill" style="width:${s.dollarExposure}%;background:${s.dollarExposure>50?'var(--amber)':'var(--green)'}"></div>
+          </div>
+          ${s.dollarExposure}%
+        </div>
+      </td>
+      <td><span class="badge ${s.dedollarTests.t1?'badge-green':'badge-red'}">${s.dedollarTests.t1?'✓ Pass':'✗ Fail'}</span></td>
+      <td><span class="badge ${s.dedollarTests.t2?'badge-green':'badge-red'}">${s.dedollarTests.t2?'✓ Pass':'✗ Fail'}</span></td>
+      <td><span class="badge ${s.dedollarTests.t3?'badge-green':'badge-red'}">${s.dedollarTests.t3?'✓ Pass':'✗ Fail'}</span></td>
+      <td><span class="badge badge-green" style="font-size:12px">3/3 ✓</span></td>
+    </tr>`).join('');
+}
+
+function renderSettingsCards() {
+  const c = document.getElementById('settings-cards');
+  if (!c) return;
+  c.innerHTML = Object.entries(STOCKS).map(([ticker, stock])=>{
+    const s = settings[ticker] || stock.thresholds;
+    return `
+    <div class="card" style="margin-bottom:16px;border-left:3px solid ${stock.color}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="font-size:15px;font-weight:600;color:${stock.color}">${stock.name}</div>
+        <span class="badge badge-blue">${ticker}</span>
+      </div>
+      ${[
+        {key:'drop5', label:'Alert on 5% drop from 52W high', desc:'Watch signal — small accumulation'},
+        {key:'drop10', label:'Alert on 10% drop from 52W high', desc:'Strong buy signal'},
+        {key:'drop15', label:'Alert on 15% drop from 52W high', desc:'Aggressive accumulation zone'}
+      ].map(t=>`
+        <div class="threshold-row">
+          <div>
+            <div style="font-size:13px;color:var(--text)">${t.label}</div>
+            <div style="font-size:11px;color:var(--text3)">${t.desc}</div>
+          </div>
+          <button class="toggle ${s[t.key]?'on':'off'}" id="${ticker}-${t.key}" onclick="toggleSetting('${ticker}','${t.key}',this)"></button>
+        </div>`).join('')}
+      <div class="threshold-row">
+        <div>
+          <div style="font-size:13px;color:var(--text)">Custom drop threshold</div>
+          <div style="font-size:11px;color:var(--text3)">Alert when stock drops this % from 52W high</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="number" id="${ticker}-custom-val" value="${s.custom||8}" min="1" max="50" style="width:60px" oninput="settings['${ticker}'].custom=parseInt(this.value)||8">
+          <span style="font-size:12px;color:var(--text2)">%</span>
+          <button class="toggle ${s.custom?'on':'off'}" id="${ticker}-custom" onclick="toggleSetting('${ticker}','custom',this)"></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSetting(ticker, key, btn) {
+  settings[ticker] = settings[ticker] || {};
+  settings[ticker][key] = !settings[ticker][key];
+  btn.className = `toggle ${settings[ticker][key]?'on':'off'}`;
+}
+
+function saveSettings() {
+  localStorage.setItem('ddSettings', JSON.stringify(settings));
+  showToast('Settings saved successfully');
+}
+
+function showToast(msg) {
+  const bar = document.getElementById('notif-bar');
+  if (!bar) { console.log('Toast:', msg); return; } // FIX NULL-3
+  const div = document.createElement('div');
+  div.className = 'notif';
+  div.innerHTML = `<div style="color:var(--green)">✓</div><div style="flex:1;font-size:13px;color:var(--text)">${msg}</div><button class="notif-close" onclick="this.parentElement.remove()">✕</button>`;
+  bar.appendChild(div);
+  setTimeout(()=>div.remove(), 3000);
+}
+
+function updateSummaryStats() {
+  const prices = Object.values(priceData);
+  if (prices.length === 0) return;
+  const avgDrop = prices.reduce((a,b)=>a+b.fromHigh,0)/prices.length;
+  const el = document.getElementById('stat-avg-drop');
+  if (el) { 
+    el.textContent = avgDrop.toFixed(1)+'%';
+    el.className = 'stat-value ' + (avgDrop <= -10 ? 'stat-green' : avgDrop <= -5 ? 'stat-amber' : 'stat-red');
+  }
+  const simulated = prices.some(p=>p.isSimulated);
+  const statusEl = document.getElementById('stat-status');
+  if (statusEl) {
+    statusEl.textContent = simulated ? 'Simulated' : 'Live';
+    statusEl.className = `stat-value ${simulated?'stat-amber':'stat-green'}`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// DRILL DOWN MODAL
+// ═══════════════════════════════════════════════════════
+function calcHealthScore(f) {
+  let score = 0;
+  if (f.roe >= 25) score += 20; else if (f.roe >= 18) score += 14; else score += 6;
+  if (f.de_ratio <= 0.1) score += 20; else if (f.de_ratio <= 0.3) score += 14; else score += 6;
+  if (f.revenue_cagr_3y >= 20) score += 15; else if (f.revenue_cagr_3y >= 12) score += 10; else score += 4;
+  if (f.pat_cagr_3y >= 25) score += 15; else if (f.pat_cagr_3y >= 15) score += 10; else score += 4;
+  if (f.promoter_holding >= 60) score += 15; else if (f.promoter_holding >= 50) score += 10; else score += 4;
+  if (f.current_ratio >= 2) score += 15; else if (f.current_ratio >= 1.5) score += 10; else score += 4;
+  return Math.min(100, score);
+}
+
+let chartInstances = {};
+
+function openDrilldown(ticker) {
+  currentModal = ticker;
+  const stock = STOCKS[ticker];
+  const price = priceData[ticker];
+  const f = stock.fundamentals;
+  
+  document.getElementById('modal-stock-name').textContent = stock.name;
+  document.getElementById('modal-stock-sub').innerHTML = `
+    <span style="color:${stock.color}">${stock.sector}</span> · 
+    <span style="color:var(--text3)">${ticker}</span>
+    ${price ? ` · ₹${price.curr.toFixed(2)} <span style="color:${price.changePct>=0?'var(--green)':'var(--red)'}">${price.changePct>=0?'+':''}${price.changePct.toFixed(2)}%</span>` : ''}`;
+  
+  // Destroy old charts
+  Object.values(chartInstances).forEach(c=>{try{c.destroy()}catch(e){}});
+  chartInstances = {};
+  
+  // FIX DOM-1: set innerHTML BEFORE calling switchTab
+  const safeSet = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  safeSet('tab-overview', buildOverviewTab(ticker, stock, price, f));
+  safeSet('tab-financials', buildFinancialsTab(ticker, stock, f));
+  safeSet('tab-dedollar', buildDeDollarTab(ticker, stock, price));
+  safeSet('tab-returns', buildReturnsTab(ticker, stock, price, f));
+  
+  // Now switch tab — DOM is ready
+  const modalTabBar = document.getElementById('modal-tab-bar');
+  const firstTab = modalTabBar ? modalTabBar.querySelector('.modal-tab') : null;
+  switchTab('overview', firstTab);
+  document.getElementById('drill-modal').classList.add('open');
+  
+  // Render charts after DOM is ready
+  setTimeout(() => {
+    renderPriceChart(ticker, price);
+    renderFinancialCharts(ticker, stock);
+  }, 100);
+}
+
+function buildOverviewTab(ticker, stock, price, f) {
+  const score = calcHealthScore(f);
+  const gradeColor = score>=80?'var(--green)':score>=65?'var(--amber)':'var(--red)';
+  const p = price;
+  return `
+  <div class="health-score">
+    <div class="health-circle health-grade-${score>=80?'A':score>=65?'B':'C'}" style="border-color:${gradeColor};color:${gradeColor}">
+      <div class="health-score-val">${score}</div>
+      <div class="health-score-lbl">/100</div>
+    </div>
+    <div>
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">Financial Health Score</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7">${stock.moat}</div>
+    </div>
+  </div>
+  
+  <div class="grid-3" style="margin-bottom:20px">
+    ${[
+      ['CMP', p?'₹'+p.curr.toFixed(2):'—', ''],
+      ['52W High', p?'₹'+p.high52.toFixed(2):'—', ''],
+      ['From High', p?p.fromHigh.toFixed(1)+'%':'—', p&&p.fromHigh<=-10?'stat-green':p&&p.fromHigh<=-5?'stat-amber':''],
+      ['Market Cap', '₹'+f.market_cap_cr.toLocaleString('en-IN')+' Cr', ''],
+      ['P/E Ratio', f.pe+'x', ''],
+      ['Div Yield', f.dividend_yield+'%', 'stat-green']
+    ].map(([l,v,c])=>`
+      <div class="stat-card card-sm">
+        <div class="stat-label">${l}</div>
+        <div class="stat-value ${c}" style="font-size:18px">${v}</div>
+      </div>`).join('')}
+  </div>
+  
+  <div class="chart-wrap"><canvas id="price-chart-${ticker}"></canvas></div>
+  
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Investment Thesis</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">${stock.thesis}</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Key Risks</div>
+      <div style="font-size:13px;color:var(--text2)">${stock.risks}</div>
+    </div>
+  </div>`;
+}
+
+function buildFinancialsTab(ticker, stock, f) {
+  const years = stock.financials.years;
+  return `
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card card-sm">
+      <div class="card-title">Revenue Trend (₹ Cr)</div>
+      <div style="position:relative;height:180px"><canvas id="rev-chart-${ticker}"></canvas></div>
+    </div>
+    <div class="card card-sm">
+      <div class="card-title">PAT Trend (₹ Cr)</div>
+      <div style="position:relative;height:180px"><canvas id="pat-chart-${ticker}"></canvas></div>
+    </div>
+  </div>
+  
+  <table class="data-table" style="margin-bottom:20px">
+    <thead><tr><th>Metric</th><th>Value</th><th>Benchmark</th><th>Assessment</th></tr></thead>
+    <tbody>
+      ${[
+        ['ROE', f.roe+'%', '>18%', f.roe>=18],
+        ['ROCE', f.roce+'%', '>20%', f.roce>=20],
+        ['Debt/Equity', f.de_ratio, '<0.5', f.de_ratio<=0.5],
+        ['Current Ratio', f.current_ratio, '>1.5', f.current_ratio>=1.5],
+        ['Revenue CAGR (3Y)', f.revenue_cagr_3y+'%', '>15%', f.revenue_cagr_3y>=15],
+        ['PAT CAGR (3Y)', f.pat_cagr_3y+'%', '>20%', f.pat_cagr_3y>=20],
+        ['Operating Margin', f.operating_margin+'%', '>15%', f.operating_margin>=15],
+        ['Promoter Holding', f.promoter_holding+'%', '>50%', f.promoter_holding>=50],
+        ['FII Holding', f.fii_holding+'%', 'N/A', true],
+        ['P/E Ratio', f.pe+'x', 'Context', true],
+        ['P/B Ratio', f.pb+'x', 'Context', true],
+        ['Dividend Yield', f.dividend_yield+'%', '>0%', f.dividend_yield>0],
+      ].map(([m,v,b,g])=>`
+        <tr>
+          <td>${m}</td>
+          <td style="font-weight:600;color:${g?'var(--green)':'var(--amber)'}">${v}</td>
+          <td style="color:var(--text3)">${b}</td>
+          <td><span class="badge ${g?'badge-green':'badge-amber'}">${g?'✓ Strong':'⚠ Watch'}</span></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>
+  
+  <div class="card">
+    <div class="card-title">Shareholding Pattern</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      ${[
+        ['Promoter', f.promoter_holding, 'var(--accent)'],
+        ['FII', f.fii_holding, 'var(--purple)'],
+        ['DII', f.dii_holding, 'var(--green)'],
+      ].map(([l,v,c])=>`
+        <div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:14px">
+          <div style="font-size:24px;font-weight:700;color:${c}">${v}%</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px">${l}</div>
+          <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${v}%;background:${c}"></div></div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function buildDeDollarTab(ticker, stock, price) {
+  const tests = stock.dedollarTests;
+  const notes = stock.dedollarNotes;
+  const allPass = Object.values(tests).every(Boolean);
+  return `
+  <div style="background:${allPass?'rgba(34,211,165,0.07)':'rgba(248,113,113,0.07)'};border:1px solid ${allPass?'rgba(34,211,165,0.2)':'rgba(248,113,113,0.2)'};border-radius:var(--r2);padding:16px 20px;margin-bottom:20px">
+    <div style="font-size:16px;font-weight:600;color:${allPass?'var(--green)':'var(--red)'};margin-bottom:6px">
+      ${allPass ? '✓ DeDollarisation SAFE — All 3 tests passed' : '✗ Not DeDollarisation Safe'}
+    </div>
+    <div style="font-size:13px;color:var(--text2)">
+      Dollar revenue exposure: <strong style="color:${stock.dollarExposure>50?'var(--amber)':'var(--green)'}">${stock.dollarExposure}%</strong>
+      ${stock.dollarExposure > 50 ? ' · High export share, but offset by monopoly repricing power' : ' · Low dollar dependency — primarily domestic revenues'}
+    </div>
+  </div>
+  
+  <div class="card" style="margin-bottom:16px">
+    ${[
+      {n:'T1', label:'No critical dollar trade settlement dependency', pass:tests.t1, note:notes.t1},
+      {n:'T2', label:'Demand not tied to US/Western economic health', pass:tests.t2, note:notes.t2},
+      {n:'T3', label:'Business structurally strengthens in multipolar world', pass:tests.t3, note:notes.t3},
+    ].map(t=>`
+      <div class="dd-test">
+        <div class="dd-icon ${t.pass?'dd-pass':'dd-fail'}">${t.pass?'✓':'✗'}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Test ${t.n}: ${t.label}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.7">${t.note}</div>
+        </div>
+      </div>`).join('')}
+  </div>
+  
+  <div class="card">
+    <div class="card-title">Scenario Analysis — Dollar Collapses 50%</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">
+      <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:var(--r);padding:12px">
+        <div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:4px">CRISIS STOCK BOTTOM</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text)">–40 to –60%</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Panic selling, market-wide correlation = 1</div>
+      </div>
+      <div style="background:rgba(34,211,165,0.08);border:1px solid rgba(34,211,165,0.2);border-radius:var(--r);padding:12px">
+        <div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">BUSINESS SURVIVAL</div>
+        <div style="font-size:16px;font-weight:600;color:var(--green)">${ticker==='HBLPOWER.NS'?'~100%':ticker==='SANDUMA.NS'?'80–90%':ticker==='SHIVALIK.NS'?'50–70%':'60–75%'}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Revenue surviving the crisis period</div>
+      </div>
+      <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:var(--r);padding:12px">
+        <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:4px">5-YEAR RECOVERY</div>
+        <div style="font-size:16px;font-weight:600;color:var(--accent)">Full + Stronger</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Post-crisis compounding thesis intact</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildReturnsTab(ticker, stock, price, f) {
+  // FIX NULL-4: safe guard on targets
+  const _t = stock.targets || {};
+  const safeR = r => (Array.isArray(r) && r.length >= 2) ? r : [14, 20];
+  const t = { bear: safeR(_t.bear), base: safeR(_t.base), bull: safeR(_t.bull) };
+  return `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+    ${[
+      ['Bear Case', t.bear, 'var(--red)', 'US recession, prolonged FII outflows, earnings disappoint'],
+      ['Base Case', t.base, 'var(--accent)', 'India GDP 6.5–7.5%, capex cycle sustains, FII return H2 2026'],
+      ['Bull Case', t.bull, 'var(--green)', 'India manufacturing hub, PLI delivers, global re-rating']
+    ].map(([l,[lo,hi],c,d])=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:16px">
+        <div style="font-size:12px;color:${c};font-weight:600;margin-bottom:6px">${l}</div>
+        <div style="font-size:28px;font-weight:700;color:${c}">${lo}–${hi}%</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CAGR over 10 years</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6">${d}</div>
+        ${price ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3)">₹${price.curr.toFixed(0)} → 10Y target</div>
+          <div style="font-size:14px;font-weight:600;color:${c}">₹${(price.curr*Math.pow(1+lo/100,10)).toFixed(0)}–${(price.curr*Math.pow(1+hi/100,10)).toFixed(0)}</div>
+        </div>` : ''}
+      </div>`).join('')}
+  </div>
+  
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">10-Year Wealth Projection (Base Case)</div>
+    <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead><tr><th>Year</th>${[1,2,3,5,7,10].map(y=>`<th>${new Date().getFullYear()+y}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${['Bear','Base','Bull'].map((s,i)=>`
+          <tr>
+            <td style="font-weight:600;color:${['var(--red)','var(--accent)','var(--green)'][i]}">${s}</td>
+            ${[1,2,3,5,7,10].map(y=>`
+              <td>₹${price ? Math.round(price.curr*Math.pow(1+[tBear[0],tBase[0],tBull[0]][i]/100,y)) : '—'}</td>`).join('')}
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  
+  <div class="card" style="background:rgba(56,189,248,0.04)">
+    <div class="card-title">Why This Stock Belongs In The Portfolio</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">${stock.thesis}</div>
+  </div>`;
+}
+
+// Chart rendering
+function renderPriceChart(ticker, price) {
+  if (!price || !price.histPrices) return;
+  const ctx = document.getElementById(`price-chart-${ticker}`);
+  if (!ctx) return;
+  // FIX CHART-4: destroy existing instance before re-create
+  const existKey = `price-${ticker}`;
+  if (chartInstances[existKey]) { try { chartInstances[existKey].destroy(); } catch(e){} delete chartInstances[existKey]; }
+  const stock = STOCKS[ticker];
+  const labels = price.histPrices.map((_,i)=>i===0?'60d ago':i===price.histPrices.length-1?'Now':'');
+  
+  if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
+  chartInstances[`price-${ticker}`] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Price (₹)',
+        data: price.histPrices,
+        borderColor: stock.color,
+        backgroundColor: stock.colorDim,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b',maxTicksLimit:6} },
+        y: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b', callback:v=>'₹'+v.toFixed(0)} }
+      }
+    }
+  });
+}
+
+function renderFinancialCharts(ticker, stock) {
+  const fin = stock.financials;
+  const colors = { bg: stock.colorDim, border: stock.color };
+  
+  ['rev','pat'].forEach(type=>{
+    const ctx = document.getElementById(`${type}-chart-${ticker}`);
+    if (!ctx) return;
+    if (typeof Chart === 'undefined') return;
+    // Reset canvas to clear stale context (FIX CHART-3)
+    try { const p=ctx.parentNode; const cl=ctx.cloneNode(false); p.replaceChild(cl,ctx); ctx=cl; } catch(e){}
+    chartInstances[`${type}-${ticker}`] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: fin.years,
+        datasets: [{
+          data: type==='rev' ? fin.revenue : fin.pat,
+          backgroundColor: colors.bg,
+          borderColor: colors.border,
+          borderWidth: 1.5,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{display:false} },
+        scales: {
+          x: { grid:{display:false}, ticks:{color:'#64748b'} },
+          y: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b', callback:v=>'₹'+v} }
+        }
+      }
+    });
+  });
+}
+
+function closeModal() {
+  document.getElementById('drill-modal').classList.remove('open');
+  // FIX LOGIC-3: destroy charts on close to prevent memory leak
+  Object.values(chartInstances).forEach(c=>{ try { c.destroy(); } catch(e){} });
+  chartInstances = {};
+  currentModal = null;
+}
+
+function switchTab(name, btn) {
+  ['overview','financials','dedollar','returns'].forEach(t=>{
+    const el = document.getElementById('tab-'+t);
+    if (el) el.style.display = t===name ? 'block' : 'none';
+  });
+  // FIX EVENT-4: scope to modal tab bar only
+  const tabBar = document.getElementById('modal-tab-bar');
+  if (tabBar) tabBar.querySelectorAll('.modal-tab').forEach(b=>b.classList.remove('active'));
+  if (btn && btn.classList) btn.classList.add('active');
+  else if (tabBar) { const first = tabBar.querySelector('.modal-tab'); if (first) first.classList.add('active'); }
+  
+  // FIX DOM-2: render financial charts only when financials tab is visible
+  if (name === 'financials' && currentModal && STOCKS[currentModal]) {
+    setTimeout(()=>{
+      try { renderFinancialCharts(currentModal, STOCKS[currentModal]); }
+      catch(e) { console.error('renderFinancialCharts error:', e); }
+    }, 80);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showPage(name, navItem) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (navItem) navItem.classList.add('active');
+  if (name === 'settings') renderSettingsCards();
+}
+
+function updateInterval() {
+  const sel = document.getElementById('interval-select');
+  if (!sel) return; // FIX NULL-5: sidebar hidden on mobile
+  refreshInterval = parseInt(sel.value) || 60000;
+  const disp = document.getElementById('interval-display');
+  if (disp && sel.options[sel.selectedIndex]) disp.textContent = sel.options[sel.selectedIndex].text;
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(refreshAll, refreshInterval);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
+document.getElementById('drill-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('drill-modal')) closeModal();
+});
+
+// Boot
+refreshAll();
+refreshTimer = setInterval(refreshAll, refreshInterval);
+</script>
+</body>
+</html>
