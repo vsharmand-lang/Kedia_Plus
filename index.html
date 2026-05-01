@@ -996,7 +996,7 @@ function buildStockCard(ticker, container, showHealth=false) {
   const ddPass = Object.values(stock.dedollarTests).filter(Boolean).length;
   
   return `
-  <div class="stock-card ${alertActive?'alert-active':''}" onclick="openDrilldown('${ticker}')" style="--accent-color:${stock.color}">
+  <div class="stock-card ${alertActive?'alert-active':''}" data-ticker="${ticker}" style="--accent-color:${stock.color}">
     <div style="position:absolute;top:12px;right:12px;display:flex;gap:4px">${simBadge}</div>
     <div class="stock-header">
       <div>
@@ -1049,6 +1049,7 @@ function renderLivePrices() {
   
   const tbody = document.getElementById('price-table-body');
   if (!tbody) return;
+  // Use data-ticker for event delegation - avoids inline onclick entirely
   tbody.innerHTML = Object.entries(STOCKS).map(([ticker, stock])=>{
     const p = priceData[ticker];
     if (!p) return `<tr><td colspan="9" style="color:var(--text3);text-align:center">Loading ${stock.name}...</td></tr>`;
@@ -1056,7 +1057,7 @@ function renderLivePrices() {
     const sign = p.changePct >= 0 ? '+' : '';
     const fromHighCls = p.fromHigh <= -10 ? 'stat-green' : p.fromHigh <= -5 ? 'stat-amber' : '';
     return `
-    <tr onclick="openDrilldown('${ticker}')" style="cursor:pointer">
+    <tr data-ticker="${ticker}" style="cursor:pointer" class="stock-row">
       <td><strong style="color:${stock.color}">${stock.name}</strong><div style="font-size:11px;color:var(--text3)">${ticker}</div></td>
       <td style="font-weight:600">₹${p.curr.toFixed(2)}</td>
       <td class="${chgCls}">${sign}${p.changePct.toFixed(2)}% (₹${p.change.toFixed(2)})</td>
@@ -1065,9 +1066,23 @@ function renderLivePrices() {
       <td class="${fromHighCls}" style="font-weight:600">${p.fromHigh.toFixed(1)}%</td>
       <td class="stat-green">+${p.fromLow.toFixed(1)}%</td>
       <td>${(p.vol/100000).toFixed(1)}L</td>
-      <td><button class="btn btn-primary btn-sm" onclick="stopProp(event);openDrilldown('${ticker}')">Analyse</button></td>
+      <td><button class="btn btn-primary btn-sm drill-btn" data-ticker="${ticker}">Analyse</button></td>
     </tr>`;
   }).join('');
+  // Attach delegated listeners after innerHTML is set
+  tbody.querySelectorAll('.drill-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var t = btn.getAttribute('data-ticker');
+      if (t) openDrilldown(t);
+    });
+  });
+  tbody.querySelectorAll('.stock-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var t = row.getAttribute('data-ticker');
+      if (t) openDrilldown(t);
+    });
+  });
 }
 
 function renderAlerts() {
@@ -1118,7 +1133,7 @@ function renderHealthCards() {
     const grade = score >= 80 ? 'A' : score >= 65 ? 'B' : 'C';
     const gradeColor = score >= 80 ? 'var(--green)' : score >= 65 ? 'var(--amber)' : 'var(--red)';
     return `
-    <div class="stock-card" onclick="openDrilldown('${ticker}')">
+    <div class="stock-card" data-ticker="${ticker}">
       <div class="stock-header" style="margin-bottom:14px">
         <div>
           <div class="stock-name" style="color:${stock.color}">${stock.name}</div>
@@ -1155,7 +1170,7 @@ function renderDDMatrix() {
   const tbody = document.getElementById('dd-matrix-body');
   if (!tbody) return;
   tbody.innerHTML = Object.entries(STOCKS).map(([ticker, s])=>`
-    <tr onclick="openDrilldown('${ticker}')" style="cursor:pointer">
+    <tr data-ticker="${ticker}" style="cursor:pointer">
       <td><strong style="color:${s.color}">${s.name}</strong></td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
@@ -1265,6 +1280,10 @@ function calcHealthScore(f) {
 let chartInstances = {};
 
 function openDrilldown(ticker) {
+  if (!ticker || !STOCKS[ticker]) {
+    console.error('[openDrilldown] Invalid ticker:', ticker);
+    return;
+  }
   currentModal = ticker;
   const stock = STOCKS[ticker];
   const price = priceData[ticker];
@@ -1281,11 +1300,11 @@ function openDrilldown(ticker) {
   chartInstances = {};
   
   // FIX DOM-1: set innerHTML BEFORE calling switchTab
-  const safeSet = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  safeSet('tab-overview', buildOverviewTab(ticker, stock, price, f));
-  safeSet('tab-financials', buildFinancialsTab(ticker, stock, f));
-  safeSet('tab-dedollar', buildDeDollarTab(ticker, stock, price));
-  safeSet('tab-returns', buildReturnsTab(ticker, stock, price, f));
+  const safeSet = (id, val) => { try { const el = document.getElementById(id); if (el) el.innerHTML = val; } catch(e) { console.error('safeSet error for', id, e); } };
+  try { safeSet('tab-overview',   buildOverviewTab(ticker, stock, price, f)); } catch(e) { console.error('buildOverviewTab error:', e); safeSet('tab-overview', '<p style="color:var(--red);padding:20px">Error loading overview: ' + e.message + '</p>'); }
+  try { safeSet('tab-financials', buildFinancialsTab(ticker, stock, f));      } catch(e) { console.error('buildFinancialsTab error:', e); safeSet('tab-financials', '<p style="color:var(--red);padding:20px">Error loading financials: ' + e.message + '</p>'); }
+  try { safeSet('tab-dedollar',   buildDeDollarTab(ticker, stock, price));    } catch(e) { console.error('buildDeDollarTab error:', e); safeSet('tab-dedollar', '<p style="color:var(--red);padding:20px">Error loading analysis: ' + e.message + '</p>'); }
+  try { safeSet('tab-returns',    buildReturnsTab(ticker, stock, price, f));  } catch(e) { console.error('buildReturnsTab error:', e); safeSet('tab-returns', '<p style="color:var(--red);padding:20px">Error loading returns: ' + e.message + '</p>'); }
   
   // Now switch tab — DOM is ready
   const modalTabBar = document.getElementById('modal-tab-bar');
@@ -1624,6 +1643,17 @@ function updateInterval() {
 // INIT
 // ═══════════════════════════════════════════════════════
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
+
+// Global click delegation for all elements with data-ticker attribute
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  // Walk up to find element with data-ticker (but not if clicking a button - buttons handle themselves)
+  if (target.closest('button')) return;
+  var el = target.closest('[data-ticker]');
+  if (!el) return;
+  var ticker = el.getAttribute('data-ticker');
+  if (ticker && STOCKS[ticker]) openDrilldown(ticker);
+}, true);
 document.getElementById('drill-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('drill-modal')) closeModal();
 });
