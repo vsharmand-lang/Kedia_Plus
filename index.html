@@ -1003,7 +1003,7 @@ function buildStockCard(ticker, container, showHealth=false) {
   const stock = STOCKS[ticker];
   const price = priceData[ticker];
   const f = stock.fundamentals;
-  const simBadge = price?.isSimulated ? '<span class="badge badge-amber" style="font-size:9px">Simulated</span>' : '<span class="badge badge-green" style="font-size:9px">Live</span>';
+  const simBadge = '';
   
   const cmp = price ? `₹${price.curr.toFixed(2)}` : '—';
   const chg = price ? price.changePct.toFixed(2) : '0';
@@ -1018,7 +1018,7 @@ function buildStockCard(ticker, container, showHealth=false) {
   
   return `
   <div class="stock-card ${alertActive?'alert-active':''}" data-ticker="${ticker}" style="--accent-color:${stock.color}">
-    <div style="position:absolute;top:12px;right:12px;display:flex;gap:4px">${simBadge}</div>
+    
     <div class="stock-header">
       <div>
         <div class="stock-name" style="color:${stock.color}">${stock.name}</div>
@@ -1570,7 +1570,7 @@ function renderPriceChart(ticker, price) {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend:{display:false} },
       scales: {
-        x: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b',maxTicksLimit:6} },
+        x: { grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#65676B',maxTicksLimit:6} },
         y: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b', callback:v=>'₹'+v.toFixed(0)} }
       }
     }
@@ -1578,21 +1578,34 @@ function renderPriceChart(ticker, price) {
 }
 
 function renderFinancialCharts(ticker, stock) {
+  if (!stock || !stock.financials) return;
+  if (typeof Chart === 'undefined') return;
   const fin = stock.financials;
-  const colors = { bg: stock.colorDim, border: stock.color };
-  
+  const colors = { bg: stock.colorDim || 'rgba(24,119,242,0.12)', border: stock.color || '#1877F2' };
+
   ['rev','pat'].forEach(type=>{
-    const ctx = document.getElementById(`${type}-chart-${ticker}`);
-    if (!ctx) return;
-    if (typeof Chart === 'undefined') return;
-    // Reset canvas to clear stale context (FIX CHART-3)
-    try { const p=ctx.parentNode; const cl=ctx.cloneNode(false); p.replaceChild(cl,ctx); ctx=cl; } catch(e){}
-    chartInstances[`${type}-${ticker}`] = new Chart(ctx, {
+    const key = type + '-' + ticker;
+    // Destroy existing instance first
+    if (chartInstances[key]) { try { chartInstances[key].destroy(); } catch(e){} delete chartInstances[key]; }
+
+    // FIX: use let so canvas can be reassigned after clone
+    let canvas = document.getElementById(type + '-chart-' + ticker);
+    if (!canvas) return;
+
+    // Fresh canvas to clear stale context
+    try {
+      const parent = canvas.parentNode;
+      const fresh = canvas.cloneNode(false);
+      parent.replaceChild(fresh, canvas);
+      canvas = fresh;
+    } catch(e) { /* use original */ }
+
+    chartInstances[key] = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: fin.years,
         datasets: [{
-          data: type==='rev' ? fin.revenue : fin.pat,
+          data: type === 'rev' ? fin.revenue : fin.pat,
           backgroundColor: colors.bg,
           borderColor: colors.border,
           borderWidth: 1.5,
@@ -1600,11 +1613,12 @@ function renderFinancialCharts(ticker, stock) {
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend:{display:false} },
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
         scales: {
-          x: { grid:{display:false}, ticks:{color:'#64748b'} },
-          y: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b', callback:v=>'₹'+v} }
+          x: { grid: { display: false }, ticks: { color: '#65676B', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#65676B', font: { size: 11 }, callback: function(v){ return '\u20B9' + v; } } }
         }
       }
     });
@@ -1635,7 +1649,7 @@ function switchTab(name, btn) {
     setTimeout(()=>{
       try { renderFinancialCharts(currentModal, STOCKS[currentModal]); }
       catch(e) { console.error('renderFinancialCharts error:', e); }
-    }, 80);
+    }, 150);
   }
 }
 
