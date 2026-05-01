@@ -2,76 +2,79 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>DeDollar Stock Monitor — India</title>
+<title>Kedia+ · DeDollar Stock Monitor</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg: #0a0e1a;
-  --bg2: #111827;
-  --bg3: #1a2235;
-  --bg4: #1e2d45;
-  --border: rgba(99,179,237,0.12);
-  --border2: rgba(99,179,237,0.25);
-  --text: #e2e8f0;
-  --text2: #94a3b8;
-  --text3: #64748b;
-  --accent: #38bdf8;
-  --accent2: #0ea5e9;
-  --green: #22d3a5;
-  --green2: #10b981;
-  --red: #f87171;
-  --red2: #ef4444;
-  --amber: #fbbf24;
-  --purple: #a78bfa;
-  --teal: #2dd4bf;
-  --gold: #f59e0b;
-  --r: 8px;
-  --r2: 12px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  /* Facebook Light Mode Palette */
+  --bg: #F0F2F5;
+  --bg2: #FFFFFF;
+  --bg3: #F0F2F5;
+  --bg4: #E4E6EB;
+  --border: rgba(0,0,0,0.1);
+  --border2: rgba(24,119,242,0.4);
+  --text: #050505;
+  --text2: #65676B;
+  --text3: #8A8D91;
+  --accent: #1877F2;
+  --accent2: #166FE5;
+  --green: #1E7E34;
+  --green2: #198A2E;
+  --red: #C0392B;
+  --red2: #A93226;
+  --amber: #B7770D;
+  --purple: #7D3C98;
+  --teal: #0078A8;
+  --gold: #B7770D;
+  --r: 4px;
+  --r2: 8px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.5;min-height:100vh}
 a{color:var(--accent);text-decoration:none}
 
 /* Layout */
 .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:2px 0 8px rgba(0,0,0,0.08)}
 .main{padding:24px;overflow-x:hidden}
 
 /* Sidebar */
-.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.15);background:var(--accent)}
 .logo-title{font-size:16px;font-weight:700;color:var(--accent);letter-spacing:0.02em}
 .logo-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .nav{padding:12px 8px;flex:1}
-.nav-section{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;padding:12px 12px 6px}
+.nav-section{font-size:10px;font-weight:700;color:#1877F2;letter-spacing:0.1em;text-transform:uppercase;padding:12px 12px 5px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.15s;margin-bottom:2px}
-.nav-item:hover{background:var(--bg3);color:var(--text)}
-.nav-item.active{background:rgba(56,189,248,0.12);color:var(--accent);font-weight:500}
+.nav-item:hover{background:#E4E6EB;color:var(--text)}
+.nav-item.active{background:#E7F0FD;color:var(--accent);font-weight:700;border-left:3px solid var(--accent);padding-left:9px}
 .nav-icon{width:16px;height:16px;opacity:0.8;flex-shrink:0}
-.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border);background:#F7F8FA}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#42B72A;display:inline-block;margin-right:6px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* Header */
-.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;padding-bottom:16px;border-bottom:2px solid var(--border)}
+.page-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
 .page-sub{font-size:13px;color:var(--text2);margin-top:2px}
 .header-actions{display:flex;gap:8px;align-items:center}
 
 /* Buttons */
 .btn{padding:8px 16px;border-radius:var(--r);border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s}
-.btn-primary{background:var(--accent2);color:#fff}
-.btn-primary:hover{background:var(--accent);transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#fff;font-weight:600;letter-spacing:0.01em}
+.btn-primary:hover{background:#166FE5;transform:none;filter:brightness(1.08)}
 .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
 .btn-ghost:hover{background:var(--bg3);color:var(--text)}
 .btn-sm{padding:5px 12px;font-size:12px}
 .btn-danger{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--red)}
 
 /* Cards */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .card-sm{padding:14px 16px}
-.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;color:#65676B;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px}
 
 /* Grid */
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
@@ -79,7 +82,7 @@ a{color:var(--accent);text-decoration:none}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 
 /* Stat cards */
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
 .stat-value{font-size:26px;font-weight:700;color:var(--text);line-height:1.2}
 .stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
@@ -91,14 +94,14 @@ a{color:var(--accent);text-decoration:none}
 .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px}
 .stock-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
 .stock-card:hover{border-color:var(--border2);box-shadow:0 0 0 1px rgba(56,189,248,0.1),var(--shadow);transform:translateY(-2px)}
-.stock-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--purple))}
-.stock-card.alert-active::before{background:linear-gradient(90deg,var(--green),var(--teal));animation:glow 1.5s ease-in-out infinite alternate}
+.stock-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.stock-card.alert-active::before{background:var(--green);animation:glow 1.5s ease-in-out infinite alternate}
 @keyframes glow{from{opacity:.6}to{opacity:1}}
 .stock-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
-.stock-name{font-size:15px;font-weight:700;color:var(--text)}
+.stock-name{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.2px}
 .stock-sector{font-size:11px;color:var(--text3);margin-top:2px}
 .stock-price{text-align:right}
-.stock-price-val{font-size:22px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.stock-price-val{font-size:22px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.5px}
 .stock-change{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:3px}
 .change-pos{background:rgba(34,211,165,0.12);color:var(--green)}
 .change-neg{background:rgba(248,113,113,0.12);color:var(--red)}
@@ -108,25 +111,25 @@ a{color:var(--accent);text-decoration:none}
 .metric-lbl{font-size:10px;color:var(--text3);margin-top:1px}
 .alert-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
 .badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600}
-.badge-green{background:rgba(34,211,165,0.12);color:var(--green);border:1px solid rgba(34,211,165,0.2)}
-.badge-amber{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
-.badge-red{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
-.badge-blue{background:rgba(56,189,248,0.12);color:var(--accent);border:1px solid rgba(56,189,248,0.2)}
-.badge-purple{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+.badge-green{background:#E9F5E6;color:#1E7E34;border:1px solid rgba(30,126,52,0.25);font-weight:600}
+.badge-amber{background:#FEF5DC;color:#B7770D;border:1px solid rgba(183,119,13,0.25);font-weight:600}
+.badge-red{background:#FDECEA;color:#C0392B;border:1px solid rgba(192,57,43,0.25);font-weight:600}
+.badge-blue{background:#E7F0FD;color:#1877F2;border:1px solid rgba(24,119,242,0.25);font-weight:600}
+.badge-purple{background:#F3E9FA;color:#7D3C98;border:1px solid rgba(125,60,152,0.25);font-weight:600}
 
 /* Alert thresholds */
-.threshold-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.threshold-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .threshold-row:last-child{border-bottom:none}
 .toggle{width:36px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;transition:background 0.2s}
-.toggle.on{background:var(--green2)}
-.toggle.off{background:var(--bg4)}
+.toggle.on{background:var(--accent)}
+.toggle.off{background:#CCD0D5}
 .toggle::after{content:'';position:absolute;top:3px;width:14px;height:14px;border-radius:50%;background:white;transition:left 0.2s}
 .toggle.on::after{left:19px}
 .toggle.off::after{left:3px}
 
 /* Alerts feed */
 .alert-feed{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
-.alert-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.alert-item{background:#F7F8FA;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
 .alert-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .alert-icon-drop{background:rgba(248,113,113,0.15)}
 .alert-icon-buy{background:rgba(34,211,165,0.15)}
@@ -137,24 +140,24 @@ a{color:var(--accent);text-decoration:none}
 .alert-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
 
 /* Algorithm panel */
-.algo-step{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;gap:14px}
+.algo-step{background:#F7F8FA;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;gap:14px}
 .algo-num{width:28px;height:28px;border-radius:50%;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
 .algo-body{flex:1}
 .algo-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
 .algo-desc{font-size:12px;color:var(--text2);line-height:1.6}
-.algo-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(56,189,248,0.1);color:var(--accent);margin-top:6px;margin-right:4px;font-weight:500}
+.algo-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:3px;background:#E7F0FD;color:#1877F2;border:1px solid rgba(24,119,242,0.2);margin-top:6px;margin-right:4px;font-weight:600}
 
 /* Drilldown modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:min(900px,95vw);max-height:90vh;overflow-y:auto;position:relative}
 .modal-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:2;display:flex;justify-content:space-between;align-items:flex-start}
 .modal-body{padding:24px 28px}
-.modal-close{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;cursor:pointer;color:var(--text2);font-size:16px}
+.modal-close{background:#F0F2F5;border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;cursor:pointer;color:#65676B;font-size:16px}
 .modal-close:hover{color:var(--text)}
 
 /* Financial health */
-.health-score{display:flex;align-items:center;gap:16px;background:var(--bg3);border-radius:var(--r2);padding:20px;margin-bottom:20px}
+.health-score{display:flex;align-items:center;gap:16px;background:#F7F8FA;border-radius:var(--r2);padding:20px;margin-bottom:20px}
 .health-circle{width:80px;height:80px;border-radius:50%;border:4px solid;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0}
 .health-score-val{font-size:24px;font-weight:700}
 .health-score-lbl{font-size:10px;color:var(--text2)}
@@ -163,7 +166,7 @@ a{color:var(--accent);text-decoration:none}
 .health-grade-C{border-color:var(--red);color:var(--red)}
 
 /* Tabs */
-.modal-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg3);border-radius:var(--r);padding:4px}
+.modal-tabs{display:flex;gap:2px;margin-bottom:20px;background:#F0F2F5;border-radius:var(--r);padding:3px;border:1px solid var(--border)}
 .modal-tab{padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all 0.15s;border:none;background:transparent}
 .modal-tab.active{background:var(--bg2);color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
 .modal-tab:hover:not(.modal-tab.active){color:var(--text)}
@@ -172,12 +175,12 @@ a{color:var(--accent);text-decoration:none}
 .chart-wrap{position:relative;height:220px;margin:16px 0}
 
 /* Progress bars */
-.progress-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-bar{height:6px;background:#E4E6EB;border-radius:3px;overflow:hidden;margin-top:4px}
 .progress-fill{height:100%;border-radius:3px;transition:width 0.6s ease}
 
 /* Table */
 .data-table{width:100%;border-collapse:collapse}
-.data-table th{text-align:left;padding:10px 12px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border);font-weight:600}
+.data-table th{text-align:left;padding:10px 12px;font-size:11px;color:#65676B;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid var(--border);font-weight:700;background:#F7F8FA}
 .data-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);color:var(--text2)}
 .data-table tr:last-child td{border-bottom:none}
 .data-table tr:hover td{background:var(--bg3);color:var(--text)}
@@ -192,8 +195,8 @@ a{color:var(--accent);text-decoration:none}
 /* Notification bar */
 .notif-bar{position:fixed;top:16px;right:16px;z-index:2000;display:flex;flex-direction:column;gap:8px;max-width:340px}
 .notif{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--shadow);animation:slideIn 0.3s ease;display:flex;gap:10px;align-items:flex-start}
-.notif.buying{border-color:rgba(34,211,165,0.4)}
-.notif.drop{border-color:rgba(248,113,113,0.4)}
+.notif.buying{border-top-color:#42B72A}
+.notif.drop{border-top-color:#FA383E}
 @keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
 .notif-close{margin-left:auto;cursor:pointer;color:var(--text3);font-size:14px;background:none;border:none;flex-shrink:0}
 
@@ -219,7 +222,7 @@ a{color:var(--accent);text-decoration:none}
 
 /* Last updated */
 .last-updated{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#42B72A;animation:pulse 2s infinite}
 
 /* SMILE badges */
 .smile-badges{display:flex;gap:3px}
@@ -235,15 +238,33 @@ input:focus{outline:none;border-color:var(--accent2)}
 /* Tooltip */
 [data-tip]{position:relative;cursor:help}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg4);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:10}
+
+.main{padding:24px;overflow-x:hidden;min-width:0}
+body::before{content:'';display:block;position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1877F2 0%,#42B72A 50%,#1877F2 100%);z-index:9999;pointer-events:none}
+.stat-value.stat-green{color:#1E7E34}
+.stat-value.stat-red{color:#C0392B}
+.stat-value.stat-amber{color:#B7770D}
+.metric-val.stat-green{color:#1E7E34}
+.metric-val.stat-amber{color:#B7770D}
+.metric-val.stat-red{color:#C0392B}
+.dd-pass{background:#E9F5E6;color:#1E7E34}
+.dd-fail{background:#FDECEA;color:#C0392B}
+.data-table tbody tr:hover td{background:rgba(24,119,242,0.07)!important;color:var(--text);cursor:pointer}
+.error-banner{background:#FDECEA;border:1px solid rgba(192,57,43,0.25);border-left:3px solid var(--red);border-radius:var(--r);padding:10px 14px;font-size:12px;color:#C0392B;margin-bottom:16px;display:none}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#42B72A;animation:pulse 2s infinite}
+.status-dot{background:#42B72A}
+.change-pos{background:#E9F5E6;color:#1E7E34;font-weight:700}
+.change-neg{background:#FDECEA;color:#C0392B;font-weight:700}
 </style>
 </head>
 <body>
 <div class="app">
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="logo">
-    <div class="logo-title">⬡ DeDollar Monitor</div>
-    <div class="logo-sub">India SMILE Stock Watchlist</div>
+  <div class="logo" style="background:var(--accent);padding-top:0">
+  <div style="height:4px;background:linear-gradient(90deg,#1877F2,#42B72A,#1877F2);margin:-0 -0 14px"></div>
+    <div class="logo-title" style="color:#fff;font-size:17px;letter-spacing:-0.3px"><span style="font-weight:900">K+</span> <span style="font-weight:600;opacity:.92">Monitor</span></div>
+    <div class="logo-sub" style="color:rgba(255,255,255,0.75)">India SMILE Stock Watchlist</div>
   </div>
   <nav class="nav">
     <div class="nav-section">Dashboard</div>
@@ -274,7 +295,7 @@ input:focus{outline:none;border-color:var(--accent2)}
       Alert Settings
     </div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer" style="border-top:1px solid var(--border)">
     <div style="font-size:12px;color:var(--text3)"><span class="status-dot"></span>Live · NSE/BSE Data</div>
     <div class="last-updated" style="margin-top:6px"><span class="live-dot"></span>Updated: <span id="last-update">—</span></div>
     <div style="font-size:11px;color:var(--text3);margin-top:8px">Refresh interval: <span id="interval-display">60s</span></div>
@@ -387,7 +408,7 @@ input:focus{outline:none;border-color:var(--accent2)}
   <div class="card">
     <div class="card-title">Alert Feed <span id="alert-feed-count" style="color:var(--text3);font-weight:400;text-transform:none;font-size:12px"></span></div>
     <div class="alert-feed" id="alert-feed">
-      <div class="alert-empty">No alerts yet. Monitoring active — alerts will appear when price thresholds are breached.</div>
+      <div class="alert-empty" style="color:#65676B">No alerts yet. Monitoring active — alerts will appear when price thresholds are breached.</div>
     </div>
   </div>
 </div>
@@ -1103,7 +1124,7 @@ function renderAlerts() {
   if(el('alert-feed-count')) el('alert-feed-count').textContent = alerts.length > 0 ? `(${alerts.length} total)` : '';
   
   if (alerts.length === 0) {
-    feed.innerHTML = '<div class="alert-empty">No alerts yet. Monitoring active — alerts will appear when price thresholds are breached.<br><br>Make sure to check "Alert Settings" and configure your thresholds.</div>';
+    feed.innerHTML = '<div class="alert-empty" style="color:#65676B">No alerts yet. Monitoring active — alerts will appear when price thresholds are breached.<br><br>Make sure to check "Alert Settings" and configure your thresholds.</div>';
     return;
   }
   
@@ -1155,7 +1176,7 @@ function renderHealthCards() {
           ['PAT CAGR', f.pat_cagr_3y+'%', f.pat_cagr_3y>=20],
           ['Promoter', f.promoter_holding+'%', f.promoter_holding>=55]
         ].map(([l,v,good])=>`
-          <div style="background:var(--bg3);border-radius:var(--r);padding:8px">
+          <div style="background:#F0F2F5;border-radius:var(--r);padding:8px">
             <div style="font-size:10px;color:var(--text3)">${l}</div>
             <div style="font-size:14px;font-weight:600;color:${good?'var(--green)':'var(--amber)'}">${v}</div>
           </div>
@@ -1344,7 +1365,7 @@ function buildOverviewTab(ticker, stock, price, f) {
       ['P/E Ratio', f.pe+'x', ''],
       ['Div Yield', f.dividend_yield+'%', 'stat-green']
     ].map(([l,v,c])=>`
-      <div class="stat-card card-sm">
+      <div class="stat-card card-sm" style="background:#fff">
         <div class="stat-label">${l}</div>
         <div class="stat-value ${c}" style="font-size:18px">${v}</div>
       </div>`).join('')}
@@ -1410,7 +1431,7 @@ function buildFinancialsTab(ticker, stock, f) {
         ['FII', f.fii_holding, 'var(--purple)'],
         ['DII', f.dii_holding, 'var(--green)'],
       ].map(([l,v,c])=>`
-        <div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:14px">
+        <div style="text-align:center;background:#F0F2F5;border-radius:var(--r);padding:14px">
           <div style="font-size:24px;font-weight:700;color:${c}">${v}%</div>
           <div style="font-size:12px;color:var(--text2);margin-top:4px">${l}</div>
           <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${v}%;background:${c}"></div></div>
@@ -1452,17 +1473,17 @@ function buildDeDollarTab(ticker, stock, price) {
   <div class="card">
     <div class="card-title">Scenario Analysis — Dollar Collapses 50%</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">
-      <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:var(--r);padding:12px">
+      <div style="background:#FDECEA;border:1px solid rgba(192,57,43,0.2);border-radius:var(--r);padding:12px">
         <div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:4px">CRISIS STOCK BOTTOM</div>
         <div style="font-size:16px;font-weight:600;color:var(--text)">–40 to –60%</div>
         <div style="font-size:11px;color:var(--text3);margin-top:4px">Panic selling, market-wide correlation = 1</div>
       </div>
-      <div style="background:rgba(34,211,165,0.08);border:1px solid rgba(34,211,165,0.2);border-radius:var(--r);padding:12px">
+      <div style="background:#E9F5E6;border:1px solid rgba(30,126,52,0.2);border-radius:var(--r);padding:12px">
         <div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">BUSINESS SURVIVAL</div>
         <div style="font-size:16px;font-weight:600;color:var(--green)">${ticker==='HBLPOWER.NS'?'~100%':ticker==='SANDUMA.NS'?'80–90%':ticker==='SHIVALIK.NS'?'50–70%':'60–75%'}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:4px">Revenue surviving the crisis period</div>
       </div>
-      <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:var(--r);padding:12px">
+      <div style="background:#E7F0FD;border:1px solid rgba(24,119,242,0.2);border-radius:var(--r);padding:12px">
         <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:4px">5-YEAR RECOVERY</div>
         <div style="font-size:16px;font-weight:600;color:var(--accent)">Full + Stronger</div>
         <div style="font-size:11px;color:var(--text3);margin-top:4px">Post-crisis compounding thesis intact</div>
@@ -1483,7 +1504,7 @@ function buildReturnsTab(ticker, stock, price, f) {
       ['Base Case', t.base, 'var(--accent)', 'India GDP 6.5–7.5%, capex cycle sustains, FII return H2 2026'],
       ['Bull Case', t.bull, 'var(--green)', 'India manufacturing hub, PLI delivers, global re-rating']
     ].map(([l,[lo,hi],c,d])=>`
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:16px">
+      <div style="background:#F7F8FA;border:1px solid var(--border);border-radius:var(--r2);padding:16px">
         <div style="font-size:12px;color:${c};font-weight:600;margin-bottom:6px">${l}</div>
         <div style="font-size:28px;font-weight:700;color:${c}">${lo}–${hi}%</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CAGR over 10 years</div>
@@ -1505,14 +1526,14 @@ function buildReturnsTab(ticker, stock, price, f) {
           <tr>
             <td style="font-weight:600;color:${['var(--red)','var(--accent)','var(--green)'][i]}">${s}</td>
             ${[1,2,3,5,7,10].map(y=>`
-              <td>₹${price ? Math.round(price.curr*Math.pow(1+[tBear[0],tBase[0],tBull[0]][i]/100,y)) : '—'}</td>`).join('')}
+              <td>₹${price ? Math.round(price.curr*Math.pow(1+[t.bear[0],t.base[0],t.bull[0]][i]/100,y)) : '—'}</td>`).join('')}
           </tr>`).join('')}
       </tbody>
     </table>
     </div>
   </div>
   
-  <div class="card" style="background:rgba(56,189,248,0.04)">
+  <div class="card" style="background:#EBF3FE">
     <div class="card-title">Why This Stock Belongs In The Portfolio</div>
     <div style="font-size:13px;color:var(--text2);line-height:1.8">${stock.thesis}</div>
   </div>`;
